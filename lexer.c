@@ -55,7 +55,6 @@ Token read_from_tok(char* text, uint cursor){
     static char buf[64];
     size_t i = 0;
     if (isdigit(text[cursor])) {
-        // Start of an integer token
         size_t start = cursor;
         while (isdigit(text[cursor])) {
             buf[i++] = text[cursor++];
