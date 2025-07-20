@@ -49,6 +49,7 @@ void lexer_new(char *content, size_t content_len){
 void lexer_next(Lexer *mylexer){
 }
 
+// will implement a stack for arithmetic later. do I want a compiler or interpreter? since this is a learning experience im gonna do the easier thing first
 
 Token read_from_tok(char* text, uint cursor){ 
     Token mytoks;
