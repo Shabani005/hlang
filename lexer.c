@@ -23,6 +23,7 @@ typedef enum{
   TOKEN_PLUS,
   TOKEN_MINUS,
   TOKEN_INTEGER,
+  TOKEN_SPACE,
   intdef,
   TOKEN_UNKNOWN,
 } symbols;
@@ -78,8 +79,12 @@ Token read_from_tok(char* text, uint cursor){
            mytoks.type = TOKEN_MINUS;
            mytoks.text = "-";
            break;
+         case ' ':
+           mytoks.type = TOKEN_SPACE;
+           mytoks.text = "space";
+           break;
          default:
-           mytoks.type = TOKEN_UNKNOWN; 
+           mytoks.type = TOKEN_UNKNOWN;
     } 
   }
   return mytoks;
