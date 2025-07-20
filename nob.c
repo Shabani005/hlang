@@ -5,8 +5,8 @@ int main(void){
 
   nb_append(&cmd, "gcc");
   nb_append(&cmd, "-Wall -Wextra");
-  nb_append(&cmd, "main.c");
-  nb_append(&cmd, "-o newl");
+  nb_append(&cmd, "lexer.c");
+  nb_append(&cmd, "-o lex");
   
   nb_print_info(&cmd);
   
@@ -14,7 +14,7 @@ int main(void){
 
   nb_free(&cmd);
 
-  nb_append(&cmd, "./newl");
+  nb_append(&cmd, "./lex");
 
   nb_print_info(&cmd);
 
