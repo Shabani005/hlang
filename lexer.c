@@ -24,14 +24,24 @@ typedef enum{
   TOKEN_MINUS,
   TOKEN_INTEGER,
   TOKEN_SPACE,
+  TOKEN_STRING,
   intdef,
   TOKEN_UNKNOWN,
 } symbols;
+
+typedef enum{
+  BHV_STACK,
+  BHV_UNDEFINED,
+  BHV_NUMBER,
+  BHV_STRING,
+} symbol_bhv;
 
 typedef struct{
   symbols type;
   char* text;
   size_t text_len;
+  symbol_bhv behaviour;
+  uint cursor_skip;
 } Token;
 
 typedef struct{
@@ -53,8 +63,12 @@ void lexer_next(Lexer *mylexer){
 
 Token read_from_tok(char* text, uint cursor){ 
     Token mytoks;
+    
     static char buf[64];
     size_t i = 0;
+    mytoks.cursor_skip = 1;
+
+    
     if (isdigit(text[cursor])) {
         size_t start = cursor;
         while (isdigit(text[cursor])) {
@@ -62,9 +76,23 @@ Token read_from_tok(char* text, uint cursor){
         }
         buf[i] = '\0';
         mytoks.type = TOKEN_INTEGER;
+        mytoks.behaviour = BHV_NUMBER;
+        mytoks.cursor_skip = cursor - start;
+        mytoks.text = buf;
+        mytoks.text_len = i;
+    } else if (isalpha(text[cursor])){
+        size_t start = cursor;
+        while (isalpha(text[cursor])) {
+            buf[i++] = text[cursor++];
+        }
+        buf[i] = '\0';
+        mytoks.type = TOKEN_STRING;
+        mytoks.behaviour = BHV_STRING; 
+        mytoks.cursor_skip = cursor - start;
         mytoks.text = buf;
         mytoks.text_len = i;
     }
+    
     else {
        buf[0] = text[cursor];
        buf[1] = '\0';
@@ -73,12 +101,14 @@ Token read_from_tok(char* text, uint cursor){
        switch (text[cursor]){
          case '+':
            mytoks.type = TOKEN_PLUS;
-         // asigning text is not really needed unless for debug
+         // asigning text is not really needed unless for debug. could however be useful for codegen later.
            mytoks.text = "+";
-           break;
+           mytoks.behaviour = BHV_STACK;
+                      break;
          case '-':
            mytoks.type = TOKEN_MINUS;
            mytoks.text = "-";
+           mytoks.behaviour = BHV_STACK; 
            break;
          case ' ':
            mytoks.type = TOKEN_SPACE;
@@ -86,6 +116,8 @@ Token read_from_tok(char* text, uint cursor){
            break;
          default:
            mytoks.type = TOKEN_UNKNOWN;
+           mytoks.behaviour = BHV_UNDEFINED;
+           
     } 
   }
   return mytoks;
@@ -94,22 +126,45 @@ Token read_from_tok(char* text, uint cursor){
 
 // Token* c
 
+void parser(Token mytok, char* input){
+  int length1 = strlen(input);
+  int i=0;
+
+
+
+  while (i < length1) {
+  mytok = read_from_tok(input, i);
+  
+  printf("Text: %s\n", mytok.text);
+  printf("Behaviour: %d\n", mytok.behaviour);
+      if (mytok.behaviour == BHV_STACK){
+         printf("this is stack lil bro\n");
+      }
+    i++;
+  }
+}
 
 
 // operators accepted in int/digit or whatever type def only when they have a digit before AND after them 
 
+
+/*
 int main(){
   Token newtok;
-  char* input = "32323 + 232";
-  int length1 = strlen(input);
-  int i = 0;
-  while (i < length1) {
-    Token result = read_from_tok(input, i);
-    printf("text: %s\ntype: %u\n\n", result.text, result.type);
-    if (result.type == TOKEN_INTEGER) {
-        i += result.text_len; // to skip the whole integer
-    } else {
-      i++;
+  char* input = "8";
+
+  parser(newtok, input);
+}
+*/
+
+int main(){
+    Token newtok;
+    char* input = "32323 + Hello world";
+    int length1 = strlen(input);
+    int i = 0;
+    while (i < length1) {
+        Token result = read_from_tok(input, i);
+        printf("text: %s\ntype: %u\n\n", result.text, result.type);
+        i += result.cursor_skip; 
     }
-  }
 }
