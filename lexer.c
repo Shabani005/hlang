@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <ctype.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -23,6 +24,7 @@ typedef enum{
   TOKEN_PLUS,
   TOKEN_MINUS,
   TOKEN_INTEGER,
+  TOKEN_FLOAT,
   TOKEN_SPACE,
   TOKEN_STRING,
   intdef,
@@ -34,6 +36,7 @@ typedef enum{
   BHV_UNDEFINED,
   BHV_NUMBER,
   BHV_STRING,
+  BHV_FLOAT,
 } symbol_bhv;
 
 typedef struct{
@@ -42,6 +45,7 @@ typedef struct{
   size_t text_len;
   symbol_bhv behaviour;
   uint cursor_skip;
+  symbols previous_token;
 } Token;
 
 typedef struct{
@@ -68,19 +72,40 @@ Token read_from_tok(char* text, uint cursor){
     size_t i = 0;
     mytoks.cursor_skip = 1;
 
-    
+    // integer logic. will have to somehow detect "." for floats but it will be hard to do because the way I wrote this code is shit
+    // ie: checking for . depends on the switch statement. so I will have to maybe add previous_token to the token struct. Actually a feasible idea.
+    // will I need to set previous_token to the current token? maybe.
     if (isdigit(text[cursor])) {
         size_t start = cursor;
-        while (isdigit(text[cursor])) {
-            buf[i++] = text[cursor++];
+        int dots_seen = 0;
+        while ( isdigit(text[cursor]) || text[cursor] == '.') {
+          if (text[cursor] == '.') {
+            dots_seen +=1;
+            assert(dots_seen < 2);
+          }
+          buf[i++] = text[cursor++];
         }
+        
+        // recheck this assert later
+          
+
         buf[i] = '\0';
-        mytoks.type = TOKEN_INTEGER;
-        mytoks.behaviour = BHV_NUMBER;
+
+        if (!dots_seen){
+          mytoks.type = TOKEN_INTEGER;
+          mytoks.behaviour = BHV_NUMBER;
+        } else {
+          mytoks.type = TOKEN_FLOAT;
+          mytoks.behaviour = BHV_FLOAT;
+        }
+
+       
         mytoks.cursor_skip = cursor - start;
         mytoks.text = buf;
         mytoks.text_len = i;
-    } else if (isalpha(text[cursor])){
+    } 
+    // string logic 
+    else if (isalpha(text[cursor])){
         size_t start = cursor;
         while (isalpha(text[cursor])) {
             buf[i++] = text[cursor++];
@@ -159,7 +184,7 @@ int main(){
 
 int main(){
     Token newtok;
-    char* input = "32323 + Hello world";
+    char* input = "323.23 + Hello world";
     int length1 = strlen(input);
     int i = 0;
     while (i < length1) {
