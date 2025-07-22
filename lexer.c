@@ -182,14 +182,29 @@ int main(){
 }
 */
 
-int main(){
+const char* token_type_to_string(symbols type) {
+    switch (type) {
+        case TOKEN_PLUS:     return "TOKEN_PLUS";
+        case TOKEN_MINUS:    return "TOKEN_MINUS";
+        case TOKEN_INTEGER:  return "TOKEN_INTEGER";
+        case TOKEN_FLOAT:    return "TOKEN_FLOAT";
+        case TOKEN_SPACE:    return "TOKEN_SPACE";
+        case TOKEN_STRING:   return "TOKEN_STRING";
+        case intdef:         return "intdef";
+        case TOKEN_UNKNOWN:  return "TOKEN_UNKNOWN";
+        default:             return "UNKNOWN_SYMBOL";
+    }
+}
+
+int main() {
     Token newtok;
-    char* input = "323.23 + Hello world";
+    char* input = "323.23 + Hello world 102102";
     int length1 = strlen(input);
     int i = 0;
+    printf("input: %s\n\n", input);
     while (i < length1) {
-        Token result = read_from_tok(input, i);
-        printf("text: %s\ntype: %u\n\n", result.text, result.type);
+        Token result = read_from_tok(input, i); 
+        printf("text: %s\ntype: %u (%s)\n\n", result.text, result.type, token_type_to_string(result.type));
         i += result.cursor_skip; 
     }
 }
