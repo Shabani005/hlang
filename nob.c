@@ -4,7 +4,7 @@ int main(void){
   nb_arr cmd;
 
   nb_append(&cmd, "gcc");
-  nb_append(&cmd, "-Wall -Wextra");
+  //nb_append(&cmd, "-Wall -Wextra");
   nb_append(&cmd, "lexer.c");
   nb_append(&cmd, "-o lex");
   
@@ -19,4 +19,5 @@ int main(void){
   nb_print_info(&cmd);
 
   nb_cmd(&cmd);
+
 }

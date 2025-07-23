@@ -39,6 +39,9 @@ typedef enum{
   BHV_FLOAT,
 } symbol_bhv;
 
+
+
+
 typedef struct{
   symbols type;
   char* text;
@@ -47,6 +50,12 @@ typedef struct{
   uint cursor_skip;
   symbols previous_token;
 } Token;
+
+typedef struct{
+  Token* unit;
+  size_t size;
+  size_t capacity;
+} TokenArr;
 
 typedef struct{
   char *content;
@@ -149,6 +158,30 @@ Token read_from_tok(char* text, uint cursor){
 }
 
 
+void tokenarr_push(TokenArr* arr, Token tok) {
+    if (arr->size >= arr->capacity) {
+        arr->capacity = arr->capacity ? arr->capacity * 2 : 8;
+        arr->unit = realloc(arr->unit, arr->capacity * sizeof(Token));
+        assert(arr->unit != NULL);
+    }
+    arr->unit[arr->size++] = tok;
+}
+
+TokenArr tokenize_all(const char* input) {
+    TokenArr arr = {NULL, 0, 0};
+    size_t i = 0;
+    size_t len = strlen(input);
+    while (i < len) {
+        Token tok = read_from_tok((char*)input, i);
+        tokenarr_push(&arr, tok);
+        i += tok.cursor_skip;
+    }
+    return arr;
+}
+
+
+
+
 // Token* c
 
 void parser(Token mytok, char* input){
@@ -182,7 +215,7 @@ int main(){
 }
 */
 
-const char* token_type_to_string(symbols type) {
+char* token_type_to_string(symbols type) {
     switch (type) {
         case TOKEN_PLUS:     return "TOKEN_PLUS";
         case TOKEN_MINUS:    return "TOKEN_MINUS";
@@ -196,7 +229,7 @@ const char* token_type_to_string(symbols type) {
     }
 }
 
-int main() {
+void main2() {
     Token newtok;
     char* input = "323.23 + Hello world 102102";
     int length1 = strlen(input);
@@ -207,4 +240,22 @@ int main() {
         printf("text: %s\ntype: %u (%s)\n\n", result.text, result.type, token_type_to_string(result.type));
         i += result.cursor_skip; 
     }
+}
+
+
+
+int main() {
+    char* input = "323.23 + Hello world 102102";
+    printf("input: %s\n\n", input);
+
+    TokenArr arr = tokenize_all(input);
+
+    for (size_t j = 0; j < arr.size; ++j) {
+        Token* result = &arr.unit[j];
+        printf("text: %s\ntype: %u (%s)\n\n", result->text, result->type, token_type_to_string(result->type));
+    }
+
+    // Free memory
+    free(arr.unit);
+    return 0;
 }
