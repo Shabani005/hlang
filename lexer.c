@@ -177,6 +177,7 @@ Token read_from_tok(char* text, uint cursor){
          default:
            mytoks.type = TOKEN_UNKNOWN;
            mytoks.behaviour = BHV_UNDEFINED;
+           mytoks.text = strdup(buf);
            
     } 
   }
@@ -271,7 +272,7 @@ void main2() {
 
 
 int main() {
-    char* input = "323.23 + Hello world 102102";
+    char* input = "print(5) hello";
     printf("input: %s\n\n", input);
 
     TokenArr arr = tokenize_all(input);
