@@ -64,6 +64,33 @@ typedef struct{
 } Lexer;
 
 
+// will not nesseccarilly use AST. just could be useful in the future.
+
+typedef enum{
+  AST_NUMBER,
+  AST_BINARY_OP,
+} ASTNodeType;
+
+typedef struct{
+  ASTNodeType type;
+  union {
+    struct {
+      double value;
+    } number;
+    struct {
+      char op;
+      struct ASTNode* left;
+      struct ASTNode* right;
+    } binary;
+  };
+} ASTNode;
+
+typedef struct{
+  TokenArr* tokens;
+  size_t cursor;
+} parser;
+
+
 // Lexer 
 void lexer_new(char *content, size_t content_len){
 
@@ -110,7 +137,7 @@ Token read_from_tok(char* text, uint cursor){
 
        
         mytoks.cursor_skip = cursor - start;
-        mytoks.text = buf;
+        mytoks.text = strdup(buf);
         mytoks.text_len = i;
     } 
     // string logic 
@@ -123,30 +150,29 @@ Token read_from_tok(char* text, uint cursor){
         mytoks.type = TOKEN_STRING;
         mytoks.behaviour = BHV_STRING; 
         mytoks.cursor_skip = cursor - start;
-        mytoks.text = buf;
+        mytoks.text = strdup(buf);
         mytoks.text_len = i;
     }
     
     else {
        buf[0] = text[cursor];
        buf[1] = '\0';
-       mytoks.text = buf;
        
        switch (text[cursor]){
          case '+':
            mytoks.type = TOKEN_PLUS;
          // asigning text is not really needed unless for debug. could however be useful for codegen later.
-           mytoks.text = "+";
+           mytoks.text = strdup("+");
            mytoks.behaviour = BHV_STACK;
                       break;
          case '-':
            mytoks.type = TOKEN_MINUS;
-           mytoks.text = "-";
+           mytoks.text = strdup("-");
            mytoks.behaviour = BHV_STACK; 
            break;
          case ' ':
            mytoks.type = TOKEN_SPACE;
-           mytoks.text = "space";
+           mytoks.text = strdup("space");
            break;
          default:
            mytoks.type = TOKEN_UNKNOWN;
@@ -184,7 +210,7 @@ TokenArr tokenize_all(const char* input) {
 
 // Token* c
 
-void parser(Token mytok, char* input){
+void token_parser(Token mytok, char* input){
   int length1 = strlen(input);
   int i=0;
 
@@ -249,13 +275,22 @@ int main() {
     printf("input: %s\n\n", input);
 
     TokenArr arr = tokenize_all(input);
-
+        
     for (size_t j = 0; j < arr.size; ++j) {
         Token* result = &arr.unit[j];
         printf("text: %s\ntype: %u (%s)\n\n", result->text, result->type, token_type_to_string(result->type));
     }
-
-    // Free memory
+    
+    printf("================ Tokenized =================\n");
+    
+    for (size_t j = 0; j < arr.size; ++j) {
+        Token* result = &arr.unit[j];
+        printf("text: %s, type: %u (%s) || ", result->text, result->type, token_type_to_string(result->type));
+    }
+    printf("\n");
+    for (size_t j = 0; j < arr.size; ++j) {
+      free(arr.unit[j].text);
+    }
     free(arr.unit);
     return 0;
 }
