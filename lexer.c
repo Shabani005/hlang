@@ -19,6 +19,11 @@ typedef struct{
   float myfloat;
 } mfloat;
 
+int str_to_int(char *strint){
+  int new_int = atoi(strint);
+  return new_int;
+}
+
 
 typedef enum{
   TOKEN_PLUS,
@@ -50,6 +55,8 @@ typedef struct{
   uint cursor_skip;
   symbols previous_token;
 } Token;
+
+// since I now have tokenize all I dont really need previous_token. I can just ast walk it without each individual token carrying all data
 
 typedef struct{
   Token* unit;
@@ -93,10 +100,12 @@ typedef struct{
 
 // Lexer 
 void lexer_new(char *content, size_t content_len){
-
+  (void) content;
+  (void) content_len;
 }
 // Token
 void lexer_next(Lexer *mylexer){
+  (void) mylexer;
 }
 
 // will implement a stack for arithmetic later. do I want a compiler or interpreter? since this is a learning experience im gonna do the easier thing first
@@ -271,7 +280,28 @@ void main2() {
 
 
 
-int main() {
+void astparser(const char* input){
+  TokenArr stack = tokenize_all(input);
+  
+  size_t j=0;
+
+  for (size_t i=0; i < stack.size; ++i){
+    Token stack_save = stack.unit[i];
+    //printf("current token: %s\nCurrent i: %d\n\n", stack_save.text, i);
+    if (stack_save.behaviour == BHV_STACK){
+       assert(i < stack.size-1);
+       assert(i > 0);
+       assert(stack.unit[i+1].type == TOKEN_INTEGER);  
+       assert(stack.unit[i-1].type == TOKEN_INTEGER);
+       printf("%d\n", str_to_int(stack.unit[i+1].text) + str_to_int(stack.unit[i-1].text));
+       // may switch to atoi later even here.
+
+    }
+  }
+}
+
+
+int main4() {
     char* input = "print(5) hello";
     printf("input: %s\n\n", input);
 
@@ -294,4 +324,14 @@ int main() {
     }
     free(arr.unit);
     return 0;
+}
+
+
+
+
+
+int main(){
+    char* input = "1+2";
+    printf("input: %s\n\n", input);
+    astparser(input);  
 }
