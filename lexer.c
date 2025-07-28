@@ -280,24 +280,31 @@ void main2() {
 
 
 
-void astparser(const char* input){
-  TokenArr stack = tokenize_all(input);
-  
-  size_t j=0;
-
-  for (size_t i=0; i < stack.size; ++i){
-    Token stack_save = stack.unit[i];
-    //printf("current token: %s\nCurrent i: %d\n\n", stack_save.text, i);
-    if (stack_save.behaviour == BHV_STACK){
-       assert(i < stack.size-1);
-       assert(i > 0);
-       assert(stack.unit[i+1].type == TOKEN_INTEGER);  
-       assert(stack.unit[i-1].type == TOKEN_INTEGER);
-       printf("%d\n", str_to_int(stack.unit[i+1].text) + str_to_int(stack.unit[i-1].text));
-       // may switch to atoi later even here.
-
+void astparser(const char* input) {
+    TokenArr stack = tokenize_all(input);
+    int sum = 0;
+    int sign = 1;
+    for (size_t i = 0; i < stack.size; ++i) {
+        switch (stack.unit[i].type) {
+            case TOKEN_PLUS:
+                sign = 1;
+                break;
+            case TOKEN_MINUS:
+                sign = -1;
+                break;
+            case TOKEN_INTEGER:
+                sum += sign * str_to_int(stack.unit[i].text);
+                sign = 1;
+                break;
+            default:
+                break;
+        }
     }
-  }
+    printf("%d\n", sum);
+    for (size_t j = 0; j < stack.size; ++j) {
+        free(stack.unit[j].text);
+    }
+    free(stack.unit);
 }
 
 
@@ -331,7 +338,7 @@ int main4() {
 
 
 int main(){
-    char* input = "1+2";
+    char* input = "1+69+3";
     printf("input: %s\n\n", input);
     astparser(input);  
 }
