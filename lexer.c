@@ -32,6 +32,8 @@ typedef enum{
   TOKEN_FLOAT,
   TOKEN_SPACE,
   TOKEN_STRING,
+  TOKEN_MUL,
+  TOKEN_DIV,
   intdef,
   TOKEN_UNKNOWN,
 } symbols;
@@ -170,7 +172,7 @@ Token read_from_tok(char* text, uint cursor){
        switch (text[cursor]){
          case '+':
            mytoks.type = TOKEN_PLUS;
-         // asigning text is not really needed unless for debug. could however be useful for codegen later.
+         // asigning text is not really needed unless for debug. could however be useful for codegen later. NOW IT BECAME A MUST LOL
            mytoks.text = strdup("+");
            mytoks.behaviour = BHV_STACK;
                       break;
@@ -183,6 +185,16 @@ Token read_from_tok(char* text, uint cursor){
            mytoks.type = TOKEN_SPACE;
            mytoks.text = strdup("space");
            break;
+         case '*':
+          mytoks.type = TOKEN_MUL;
+          mytoks.text = strdup("*");
+          mytoks.behaviour = BHV_STACK;
+          break;
+         case '/':
+          mytoks.type = TOKEN_DIV;
+          mytoks.text = strdup("/");
+          mytoks.behaviour = BHV_STACK;
+          break;
          default:
            mytoks.type = TOKEN_UNKNOWN;
            mytoks.behaviour = BHV_UNDEFINED;
@@ -274,37 +286,60 @@ void main2() {
     while (i < length1) {
         Token result = read_from_tok(input, i); 
         printf("text: %s\ntype: %u (%s)\n\n", result.text, result.type, token_type_to_string(result.type));
-        i += result.cursor_skip; 
+        i += result.cursor_skip;  
     }
 }
 
 
 
-void astparser(const char* input) {
-    TokenArr stack = tokenize_all(input);
-    int sum = 0;
+void astparser(const char* input) {  
+    TokenArr stack = tokenize_all(input);  
+    int result = 0;
+    int current = 0;  
     int sign = 1;
-    for (size_t i = 0; i < stack.size; ++i) {
-        switch (stack.unit[i].type) {
-            case TOKEN_PLUS:
-                sign = 1;
-                break;
-            case TOKEN_MINUS:
-                sign = -1;
-                break;
-            case TOKEN_INTEGER:
-                sum += sign * str_to_int(stack.unit[i].text);
-                sign = 1;
-                break;
-            default:
-                break;
+    int op = 0;  
+    
+    for (size_t i = 0; i < stack.size; ++i) {  
+        switch (stack.unit[i].type) {  
+            case TOKEN_INTEGER: {  
+                int value = str_to_int(stack.unit[i].text);  
+                if (op == 1) {  
+                    current *= value;  
+                    op = 0;  
+                } else if (op == 2) { 
+                    current /= value;  
+                    op = 0;  
+                } else {  
+                    current = value;  
+                }
+                break;  
+            }
+            case TOKEN_PLUS:  
+                result += sign * current;  
+                sign = 1;  
+                op = 0;  
+                break;  
+            case TOKEN_MINUS:  
+                result += sign * current;  
+                sign = -1;  
+                op = 0;  
+                break;  
+            case TOKEN_MUL:  
+                op = 1;  
+                break;  
+            case TOKEN_DIV:  
+                op = 2;  
+                break;  
+            default:  
+                break;  
         }
     }
-    printf("%d\n", sum);
-    for (size_t j = 0; j < stack.size; ++j) {
-        free(stack.unit[j].text);
+    result += sign * current; // add the last term  
+    printf("%d\n", result);  
+    for (size_t j = 0; j < stack.size; ++j) {  
+        free(stack.unit[j].text);  
     }
-    free(stack.unit);
+    free(stack.unit);  
 }
 
 
@@ -338,7 +373,7 @@ int main4() {
 
 
 int main(){
-    char* input = "1+69+3";
+    char* input = "3*69+3";
     printf("input: %s\n\n", input);
     astparser(input);  
 }
