@@ -6,7 +6,6 @@
 #include <string.h>
 #include <sys/types.h>
 
-
 typedef struct{
   char* mstr;
 } mstring;
@@ -23,6 +22,13 @@ int str_to_int(char *strint){
   int new_int = atoi(strint);
   return new_int;
 }
+
+float str_to_float(char *strif){
+  char *fptr;
+  float new_int = strtof(strif, &fptr);
+  return new_int;
+}
+
 
 
 typedef enum{
@@ -278,7 +284,6 @@ char* token_type_to_string(symbols type) {
 }
 
 void main2() {
-    Token newtok;
     char* input = "323.23 + Hello world 102102";
     int length1 = strlen(input);
     int i = 0;
@@ -292,17 +297,33 @@ void main2() {
 
 
 
-void astparser(const char* input) {  
+void mathparser(const char* input) {  
     TokenArr stack = tokenize_all(input);  
-    int result = 0;
-    int current = 0;  
-    int sign = 1;
-    int op = 0;  
+    float result = 0;
+    float current = 0;  
+    float sign = 1;
+    float op = 0;  
     
     for (size_t i = 0; i < stack.size; ++i) {  
         switch (stack.unit[i].type) {  
-            case TOKEN_INTEGER: {  
-                int value = str_to_int(stack.unit[i].text);  
+            case TOKEN_INTEGER:
+                {  
+                float value = str_to_float(stack.unit[i].text);  
+                if (op == 1) {  
+                    current *= value;  
+                    op = 0;  
+                } else if (op == 2) { 
+                    current /= value;  
+                    op = 0;  
+                } else {  
+                    current = value;  
+                }
+                break;  
+            }
+
+            case TOKEN_FLOAT:
+                {  
+                float value = str_to_float(stack.unit[i].text);  
                 if (op == 1) {  
                     current *= value;  
                     op = 0;  
@@ -334,8 +355,8 @@ void astparser(const char* input) {
                 break;  
         }
     }
-    result += sign * current; // add the last term  
-    printf("%d\n", result);  
+    result += sign * current;  
+    printf("%f\n", result);  
     for (size_t j = 0; j < stack.size; ++j) {  
         free(stack.unit[j].text);  
     }
@@ -373,7 +394,7 @@ int main4() {
 
 
 int main(){
-    char* input = "3*69+3";
-    printf("input: %s\n\n", input);
-    astparser(input);  
+    char* input = "40/2.3 * 10 + 400";
+    printf("input: %s\n", input);
+    mathparser(input);  
 }
