@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <stdbool.h>
 
 typedef struct{
   char* mstr;
@@ -71,6 +72,11 @@ typedef struct{
   size_t size;
   size_t capacity;
 } TokenArr;
+// maybe should add cursor even for TokenArr to use C's printf % to add whitespace in order to move something like this
+// input = 1 + 323 + =-=-
+//                   ^
+//                   |- Unknown Token 
+
 
 typedef struct{
   char *content;
@@ -96,15 +102,20 @@ typedef struct{
       char op;
       struct ASTNode* left;
       struct ASTNode* right;
+      // x = 5 + 3 parsed into 
+      //    =
+      //  /   \
+      // x   / \
+      //   5   3
     } binary;
   };
 } ASTNode;
 
 typedef struct{
-  TokenArr* tokens;
+  Token* tokens;
   size_t cursor;
 } parser;
-
+// tokenArr to token*
 
 // Lexer 
 void lexer_new(char *content, size_t content_len){
@@ -115,6 +126,24 @@ void lexer_new(char *content, size_t content_len){
 void lexer_next(Lexer *mylexer){
   (void) mylexer;
 }
+
+Token parser_peek(parser* p){
+  return p->tokens[p->cursor];
+}
+
+Token parser_advance(parser* p){
+  return p->tokens[p->cursor++];
+}
+
+bool parser_match(parser* p, symbols tokent){
+  if (parser_peek(p).type == tokent){
+    parser_advance(p);
+    return true;
+  } else {
+    return false;
+  }
+} 
+
 
 // will implement a stack for arithmetic later. do I want a compiler or interpreter? since this is a learning experience im gonna do the easier thing first
 
