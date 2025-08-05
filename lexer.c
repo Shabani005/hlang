@@ -43,6 +43,7 @@ typedef enum{
   TOKEN_DIV,
   intdef,
   TOKEN_UNKNOWN,
+  TOKEN_EOF,
 } symbols;
 
 typedef enum{
@@ -92,24 +93,19 @@ typedef enum{
   AST_BINARY_OP,
 } ASTNodeType;
 
-typedef struct{
+typedef struct ASTNode ASTNode;
+
+struct ASTNode {
   ASTNodeType type;
   union {
-    struct {
-      double value;
-    } number;
+    struct { double value; } number;
     struct {
       char op;
-      struct ASTNode* left;
-      struct ASTNode* right;
-      // x = 5 + 3 parsed into 
-      //    =
-      //  /   \
-      // x   / \
-      //   5   3
+      ASTNode* left;
+      ASTNode* right;
     } binary;
-  };
-} ASTNode;
+  } data;
+};
 
 typedef struct{
   Token* tokens;
@@ -143,6 +139,89 @@ bool parser_match(parser* p, symbols tokent){
     return false;
   }
 } 
+
+ASTNode* ast_new_number(double val){
+  ASTNode* node = malloc(sizeof(ASTNode));
+  node->type = AST_NUMBER;
+  node->data.number.value = val;
+  return node;
+}
+
+ASTNode* ast_new_binary(char op, ASTNode* l, ASTNode* r){
+  ASTNode* node = malloc(sizeof(ASTNode));
+  node->type = AST_BINARY_OP;
+  node->data.binary.op = op;
+  node->data.binary.left = l;
+  node->data.binary.right = r;
+  // maybe need to fix
+  return node;
+}
+
+ASTNode* parse_factor(parser* p) {
+    Token tok = parser_peek(p);
+    if (tok.type == TOKEN_EOF) {
+      fprintf(stderr, "Unexpected end of input in factor\n");
+      exit(EXIT_FAILURE);
+    }
+    if (tok.type == TOKEN_INTEGER || tok.type == TOKEN_FLOAT) {
+        parser_advance(p);
+        double v = atof(tok.text);
+        return ast_new_number(v);
+    }
+    fprintf(stderr, "Unexpected token '%s' in factor\n", tok.text);
+    exit(EXIT_FAILURE);
+}
+
+
+ASTNode* parse_term(parser* p) {
+    ASTNode* node = parse_factor(p);
+    while (true) {
+        Token tok = parser_peek(p);
+        if (tok.type == TOKEN_MUL || tok.type == TOKEN_DIV) {
+            parser_advance(p);
+            ASTNode* right = parse_factor(p);
+            node = ast_new_binary(tok.text[0], node, right);
+        } else {
+            break;
+        }
+    }
+    return node;
+}
+
+
+ASTNode* parse_expression(parser* p) {
+    ASTNode* node = parse_term(p);
+    while (true) {
+        Token tok = parser_peek(p);
+        if (tok.type == TOKEN_PLUS || tok.type == TOKEN_MINUS) {
+            parser_advance(p);
+            ASTNode* right = parse_term(p);
+            node = ast_new_binary(tok.text[0], node, right);
+        } else {
+            break;
+        }
+    }
+    return node;
+}
+
+double eval_ast(ASTNode* node) {
+    if (node->type == AST_NUMBER) {
+        return node->data.number.value;
+    }
+    double L = eval_ast(node->data.binary.left);
+    double R = eval_ast(node->data.binary.right);
+    switch (node->data.binary.op) {
+        case '+': return L + R;
+        case '-': return L - R;
+        case '*': return L * R;
+        case '/': return L / R;
+        default:
+            fprintf(stderr, "Unknown op '%c'\n", node->data.binary.op);
+            exit(EXIT_FAILURE);
+    }
+}
+
+
 
 
 // will implement a stack for arithmetic later. do I want a compiler or interpreter? since this is a learning experience im gonna do the easier thing first
@@ -256,12 +335,22 @@ TokenArr tokenize_all(const char* input) {
     size_t len = strlen(input);
     while (i < len) {
         Token tok = read_from_tok((char*)input, i);
-        tokenarr_push(&arr, tok);
         i += tok.cursor_skip;
+        if (tok.type == TOKEN_SPACE) {
+            free(tok.text);
+            continue;
+        }
+        tokenarr_push(&arr, tok);
     }
+    Token eof = {0};
+    eof.type = TOKEN_EOF;
+    eof.text = strdup("EOF");
+    eof.text_len = 3;
+    eof.behaviour = BHV_UNDEFINED;
+    eof.cursor_skip = 0;
+    tokenarr_push(&arr, eof);
     return arr;
 }
-
 
 
 
@@ -422,8 +511,24 @@ int main4() {
 
 
 
-int main(){
+int main5(){
     char* input = "40/2.3 * 10 + 400";
     printf("input: %s\n", input);
     mathparser(input);  
 }
+
+
+int main() {
+    const char* input = "40/2.3 * 10 + 400 - 5";
+    printf("Input: %s\n", input);
+
+    TokenArr toks = tokenize_all(input);
+
+    parser p = { toks.unit, 0 };
+    ASTNode* root = parse_expression(&p);
+
+    double result = eval_ast(root);
+    printf("AST Result: %f\n", result);
+    return 0;
+}
+
