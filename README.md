@@ -1,9 +1,8 @@
 > [!WARNING]
 > Uninished, Not meant to be used by others.
-
 ----------
 
-simple interpreter implemented in C. 
+## Simple Interpreter implemented in C. 
 
 Usage:
 ```
