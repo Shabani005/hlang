@@ -1,7 +1,9 @@
 > [!WARNING]
-> not meant to be used by others but rather as a fun personal project.
+> Uninished, Not meant to be used by others.
 
-simple interpreter for a non-existent language written in pure C. 
+----------
+
+simple interpreter implemented in C. 
 
 Usage:
 ```
