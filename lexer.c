@@ -6,6 +6,8 @@
 #include <string.h>
 #include <sys/types.h>
 #include <stdbool.h>
+#define NB_IMPLEMENTATION
+#include "nb.h"
 
 typedef struct{
   char* mstr;
@@ -41,9 +43,9 @@ typedef enum{
   TOKEN_STRING,
   TOKEN_MUL,
   TOKEN_DIV,
-  intdef,
   TOKEN_UNKNOWN,
   TOKEN_EOF,
+  TOKEN_NEWLINE
 } symbols;
 
 typedef enum{
@@ -54,9 +56,6 @@ typedef enum{
   BHV_FLOAT,
 } symbol_bhv;
 
-
-
-
 typedef struct{
   symbols type;
   char* text;
@@ -66,27 +65,17 @@ typedef struct{
   symbols previous_token;
 } Token;
 
-// since I now have tokenize all I dont really need previous_token. I can just ast walk it without each individual token carrying all data
-
 typedef struct{
   Token* unit;
   size_t size;
   size_t capacity;
 } TokenArr;
-// maybe should add cursor even for TokenArr to use C's printf % to add whitespace in order to move something like this
-// input = 1 + 323 + =-=-
-//                   ^
-//                   |- Unknown Token 
-
 
 typedef struct{
   char *content;
   // size_t cursor;
   // size_t line;
 } Lexer;
-
-
-// will not nesseccarilly use AST. just could be useful in the future.
 
 typedef enum{
   AST_NUMBER,
@@ -111,7 +100,6 @@ typedef struct{
   Token* tokens;
   size_t cursor;
 } parser;
-// tokenArr to token*
 
 // Lexer 
 void lexer_new(char *content, size_t content_len){
@@ -172,7 +160,6 @@ ASTNode* parse_factor(parser* p) {
     exit(EXIT_FAILURE);
 }
 
-
 ASTNode* parse_term(parser* p) {
     ASTNode* node = parse_factor(p);
     while (true) {
@@ -187,7 +174,6 @@ ASTNode* parse_term(parser* p) {
     }
     return node;
 }
-
 
 ASTNode* parse_expression(parser* p) {
     ASTNode* node = parse_term(p);
@@ -221,11 +207,6 @@ double eval_ast(ASTNode* node) {
     }
 }
 
-
-
-
-// will implement a stack for arithmetic later. do I want a compiler or interpreter? since this is a learning experience im gonna do the easier thing first
-
 Token read_from_tok(char* text, uint cursor){ 
     Token mytoks;
     
@@ -233,9 +214,6 @@ Token read_from_tok(char* text, uint cursor){
     size_t i = 0;
     mytoks.cursor_skip = 1;
 
-    // integer logic. will have to somehow detect "." for floats but it will be hard to do because the way I wrote this code is shit
-    // ie: checking for . depends on the switch statement. so I will have to maybe add previous_token to the token struct. Actually a feasible idea.
-    // will I need to set previous_token to the current token? maybe.
     if (isdigit(text[cursor])) {
         size_t start = cursor;
         int dots_seen = 0;
@@ -245,10 +223,7 @@ Token read_from_tok(char* text, uint cursor){
             assert(dots_seen < 2);
           }
           buf[i++] = text[cursor++];
-        }
-        
-        // recheck this assert later
-          
+        } 
 
         buf[i] = '\0';
 
@@ -265,7 +240,6 @@ Token read_from_tok(char* text, uint cursor){
         mytoks.text = strdup(buf);
         mytoks.text_len = i;
     } 
-    // string logic 
     else if (isalpha(text[cursor])){
         size_t start = cursor;
         while (isalpha(text[cursor])) {
@@ -283,13 +257,13 @@ Token read_from_tok(char* text, uint cursor){
        buf[0] = text[cursor];
        buf[1] = '\0';
        
-       switch (text[cursor]){
+       switch (text[cursor])
+       {
          case '+':
            mytoks.type = TOKEN_PLUS;
-         // asigning text is not really needed unless for debug. could however be useful for codegen later. NOW IT BECAME A MUST LOL
            mytoks.text = strdup("+");
            mytoks.behaviour = BHV_STACK;
-                      break;
+           break;
          case '-':
            mytoks.type = TOKEN_MINUS;
            mytoks.text = strdup("-");
@@ -308,6 +282,11 @@ Token read_from_tok(char* text, uint cursor){
           mytoks.type = TOKEN_DIV;
           mytoks.text = strdup("/");
           mytoks.behaviour = BHV_STACK;
+          break;
+         case '\n':
+          mytoks.type = TOKEN_NEWLINE;
+          mytoks.text = strdup("newline");
+          mytoks.cursor_skip = 1;
           break;
          default:
            mytoks.type = TOKEN_UNKNOWN;
@@ -336,7 +315,7 @@ TokenArr tokenize_all(const char* input) {
     while (i < len) {
         Token tok = read_from_tok((char*)input, i);
         i += tok.cursor_skip;
-        if (tok.type == TOKEN_SPACE) {
+        if (tok.type == TOKEN_SPACE || tok.type == TOKEN_NEWLINE) {
             free(tok.text);
             continue;
         }
@@ -395,23 +374,22 @@ char* token_type_to_string(symbols type) {
         case TOKEN_FLOAT:    return "TOKEN_FLOAT";
         case TOKEN_SPACE:    return "TOKEN_SPACE";
         case TOKEN_STRING:   return "TOKEN_STRING";
-        case intdef:         return "intdef";
         case TOKEN_UNKNOWN:  return "TOKEN_UNKNOWN";
         default:             return "UNKNOWN_SYMBOL";
     }
 }
 
-void main2() {
-    char* input = "323.23 + Hello world 102102";
-    int length1 = strlen(input);
-    int i = 0;
-    printf("input: %s\n\n", input);
-    while (i < length1) {
-        Token result = read_from_tok(input, i); 
-        printf("text: %s\ntype: %u (%s)\n\n", result.text, result.type, token_type_to_string(result.type));
-        i += result.cursor_skip;  
-    }
-}
+// void main2() {
+//     char* input = "323.23 + Hello world 102102";
+//     int length1 = strlen(input);
+//     int i = 0;
+//     printf("input: %s\n\n", input);
+//     while (i < length1) {
+//         Token result = read_from_tok(input, i); 
+//         printf("text: %s\ntype: %u (%s)\n\n", result.text, result.type, token_type_to_string(result.type));
+//         i += result.cursor_skip;  
+//     }
+// }
 
 
 
@@ -482,44 +460,46 @@ void mathparser(const char* input) {
 }
 
 
-int main4() {
-    char* input = "print(5) hello";
-    printf("input: %s\n\n", input);
-
-    TokenArr arr = tokenize_all(input);
-        
-    for (size_t j = 0; j < arr.size; ++j) {
-        Token* result = &arr.unit[j];
-        printf("text: %s\ntype: %u (%s)\n\n", result->text, result->type, token_type_to_string(result->type));
-    }
-    
-    printf("================ Tokenized =================\n");
-    
-    for (size_t j = 0; j < arr.size; ++j) {
-        Token* result = &arr.unit[j];
-        printf("text: %s, type: %u (%s) || ", result->text, result->type, token_type_to_string(result->type));
-    }
-    printf("\n");
-    for (size_t j = 0; j < arr.size; ++j) {
-      free(arr.unit[j].text);
-    }
-    free(arr.unit);
-    return 0;
-}
-
-
+// int main4() {
+//     char* input = "print(5) hello";
+//     printf("input: %s\n\n", input);
+//
+//     TokenArr arr = tokenize_all(input);
+//
+//     for (size_t j = 0; j < arr.size; ++j) {
+//         Token* result = &arr.unit[j];
+//         printf("text: %s\ntype: %u (%s)\n\n", result->text, result->type, token_type_to_string(result->type));
+//     }
+//
+//     printf("================ Tokenized =================\n");
+//
+//     for (size_t j = 0; j < arr.size; ++j) {
+//         Token* result = &arr.unit[j];
+//         printf("text: %s, type: %u (%s) || ", result->text, result->type, token_type_to_string(result->type));
+//     }
+//     printf("\n");
+//     for (size_t j = 0; j < arr.size; ++j) {
+//       free(arr.unit[j].text);
+//     }
+//     free(arr.unit);
+//     return 0;
+// }
 
 
 
-int main5(){
-    char* input = "40/2.3 * 10 + 400";
-    printf("input: %s\n", input);
-    mathparser(input);  
-}
 
 
-int main() {
-    const char* input = "40/2.3 * 10 + 400 - 5";
+// int main5(){
+//     char* input = "40/2.3 * 10 + 400";
+//     printf("input: %s\n", input);
+//     mathparser(input);
+//     return 0;
+// }
+
+
+int main(int argc, char** argv) {
+    if (argc > 1){
+    char* input = nb_read_file(argv[1]);
     printf("Input: %s\n", input);
 
     TokenArr toks = tokenize_all(input);
@@ -529,6 +509,9 @@ int main() {
 
     double result = eval_ast(root);
     printf("AST Result: %f\n", result);
+  } else {
+    printf("Usage: %s <file>\n", argv[0]);
+  }
+
     return 0;
 }
-
