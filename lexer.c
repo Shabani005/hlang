@@ -32,8 +32,6 @@ float str_to_float(char *strif){
   return new_int;
 }
 
-
-
 typedef enum{
   TOKEN_PLUS,
   TOKEN_MINUS,
