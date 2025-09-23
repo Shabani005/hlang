@@ -9,18 +9,6 @@
 #define NB_IMPLEMENTATION
 #include "nb.h"
 
-typedef struct{
-  char* mstr;
-} mstring;
-
-typedef struct{
-  int mint;
-} mint;
-
-typedef struct{
-  float myfloat;
-} mfloat;
-
 int str_to_int(char *strint){
   int new_int = atoi(strint);
   return new_int;
@@ -43,7 +31,10 @@ typedef enum{
   TOKEN_DIV,
   TOKEN_UNKNOWN,
   TOKEN_EOF,
-  TOKEN_NEWLINE
+  TOKEN_NEWLINE,
+  TOKEN_LPAREN,
+  TOKEN_RPAREN,
+  TOKEN_COMMA
 } symbols;
 
 typedef enum{
@@ -91,6 +82,11 @@ struct ASTNode {
       ASTNode* left;
       ASTNode* right;
     } binary;
+    struct {
+      char *name;
+      ASTNode** args;
+      size_t arg_count;
+    } func_call;
   } data;
 };
 
@@ -144,18 +140,26 @@ ASTNode* ast_new_binary(char op, ASTNode* l, ASTNode* r){
 }
 
 ASTNode* parse_factor(parser* p) {
-    Token tok = parser_peek(p);
-    if (tok.type == TOKEN_EOF) {
-      fprintf(stderr, "Unexpected end of input in factor\n");
-      exit(EXIT_FAILURE);
-    }
-    if (tok.type == TOKEN_INTEGER || tok.type == TOKEN_FLOAT) {
-        parser_advance(p);
-        double v = atof(tok.text);
-        return ast_new_number(v);
-    }
-    fprintf(stderr, "Unexpected token '%s' in factor\n", tok.text);
+  Token tok = parser_peek(p);
+  if (tok.type == TOKEN_EOF){
+    fprintf(stderr, "Unexpected end of input in factor\n");
     exit(EXIT_FAILURE);
+  }
+  if (tok.type == TOKEN_INTEGER || tok.type == TOKEN_FLOAT){
+    parser_advance(p);
+    double v = atof(tok.text);
+    return ast_new_number(v);
+  }
+  // if (tok.type == TOKEN_STRING){
+  //   parser_advance(p);
+  //   char* func_name = tok.text;
+  //   if (parser_match(p, TOKEN_LPAREN)){
+  //     size_t argc_count = 0;
+  //
+  //   }
+  // }
+  fprintf(stderr, "Unexpected token '%s' in factor\n", tok.text);
+  exit(EXIT_FAILURE);
 }
 
 ASTNode* parse_term(parser* p) {
@@ -286,10 +290,26 @@ Token read_from_tok(char* text, uint cursor){
           mytoks.text = strdup("newline");
           mytoks.cursor_skip = 1;
           break;
+         case '(':
+          mytoks.type = TOKEN_LPAREN;
+          mytoks.text = strdup("(");
+          mytoks.behaviour = BHV_STACK;
+          break;
+         case ')':
+          mytoks.type = TOKEN_RPAREN;
+          mytoks.text = strdup(")");
+          mytoks.behaviour = BHV_STACK;
+          break;
+         case ',':
+          mytoks.type = TOKEN_COMMA;
+          mytoks.text = strdup(",");
+          mytoks.behaviour = BHV_STACK;
+          break;
          default:
            mytoks.type = TOKEN_UNKNOWN;
            mytoks.behaviour = BHV_UNDEFINED;
            mytoks.text = strdup(buf);
+         
            
     } 
   }
@@ -498,7 +518,7 @@ void mathparser(const char* input) {
 int main(int argc, char** argv) {
     if (argc > 1){
     char* input = nb_read_file(argv[1]);
-    printf("Input: %s\n", input);
+    // printf("Input: %s\n", input);
 
     TokenArr toks = tokenize_all(input);
 
@@ -506,7 +526,7 @@ int main(int argc, char** argv) {
     ASTNode* root = parse_expression(&p);
 
     double result = eval_ast(root);
-    printf("AST Result: %f\n", result);
+    printf("%f\n", result);
   } else {
     printf("Usage: %s <file>\n", argv[0]);
   }
