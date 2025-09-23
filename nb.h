@@ -86,7 +86,7 @@ void nb_init(nb_arr *newarr, int initial_capacity){
 void nb_append(nb_arr *newarr, char *newval){
   if (newarr->value == NULL){
     newarr->capacity =16;
-  if (newarr->capacity > 16 | newarr->arrsize > newarr->capacity) {
+  if ((newarr->capacity > 16) | (newarr->arrsize > newarr->capacity)) {
     newarr->capacity *=2;
   }
     newarr->value = (char**)realloc(newarr->value, sizeof(char*) * newarr->capacity);
@@ -178,9 +178,9 @@ void nb_com(nb_arr *newarr){
 }
 
 
-void append_c_file(FILE *filepointer){
-
-}
+// void append_c_file(FILE *filepointer){
+//   filepointer = NULL;
+// }
 
 void nb_copy_file(char* old_file_name, char* new_file_name){ // old name shouldnt be nobuild.c. it should be the name of the current file.
   nb_file old_file; 
