@@ -1,5 +1,5 @@
 #include <assert.h>
- #include <ctype.h>
+#include <ctype.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -157,7 +157,8 @@ size_t read_from_tok(Token *tok, const char *input, size_t cursor) {
       buf[i++] = input[cursor++];
     }
     buf[i] = '\0';
-    token_push(tok, TOKEN_STRING, buf, BHV_STRING, cursor - start);
+    token_push(tok, TOKEN_STRING, buf, BHV_STRING, cursor - start); 
+    //refactor into separate function to use in parsing functions and definitions  
   } else {
     buf[0] = input[cursor];
     buf[1] = '\0';
@@ -196,9 +197,9 @@ Token tokenize_all(const char *input) {
 
 
 int main() {
-  char *expr = "1 + 2 * 3";
+  char *input = "1 + 2 * 3 print";
 
-  Token tokens = tokenize_all(expr);
+  Token tokens = tokenize_all(input);
 
   for (size_t i = 0; i < tokens.size; i++) {
     printf("[%s] \"%s\"\n", token_type_to_string(tokens.type[i]), tokens.text[i]);
