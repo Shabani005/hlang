@@ -112,6 +112,8 @@ int main(int argc, char **argv){
     printf("Type: %s\nText: %s\n\n", token_type_to_string(to_tokenize.type[i]), to_tokenize.text[i]);
   }
   ASTTree walked = ast_walk(to_tokenize);
-  printf("op: %s, left: %s, right: %s, prec %zu\n", token_type_to_string(walked.nodes->op), walked.nodes->left->text[0], walked.nodes->right->text[0], walked.nodes->prec);
+  for (int i=0; i<walked.size;++i){
+  printf("op: %s, left: %s, right: %s, prec %zu\n\n", token_type_to_string(walked.nodes[i].op), walked.nodes[i].left->text[0], walked.nodes[i].right->text[0], walked.nodes[i].prec);
+  }
   return 0;
 }
