@@ -5,6 +5,7 @@ typedef struct {
   char* left;
   char* right;
   symbols node;
+  size_t cursor;
   size_t prec;
 } ASTNode;
 
@@ -33,7 +34,8 @@ void construct_nodes(ASTTree* a, Token t){
         a->nodes[nc].node = TOKEN_PLUS;
         a->nodes[nc].left = t.text[i-1];
         a->nodes[nc].right = t.text[i+1];
-        // add precedense later for large tree construction 
+        a->nodes[nc].prec = 1;
+        a->nodes[nc].cursor = nc;
         nc++;
         break;
       case TOKEN_MINUS:
@@ -41,6 +43,8 @@ void construct_nodes(ASTTree* a, Token t){
         a->nodes[nc].node = TOKEN_MINUS;
         a->nodes[nc].left = t.text[i-1];
         a->nodes[nc].right = t.text[i+1];
+        a->nodes[nc].prec = 1;
+        a->nodes[nc].cursor = nc;
         nc++;
         break;
       case TOKEN_DIV:
@@ -48,6 +52,8 @@ void construct_nodes(ASTTree* a, Token t){
         a->nodes[nc].node = TOKEN_DIV;
         a->nodes[nc].left = t.text[i-1];
         a->nodes[nc].right = t.text[i+1];
+        a->nodes[nc].prec = 2;
+        a->nodes[nc].cursor = nc;
         nc++;
         break;
       case TOKEN_MUL:
@@ -55,10 +61,11 @@ void construct_nodes(ASTTree* a, Token t){
         a->nodes[nc].node = TOKEN_MUL;
         a->nodes[nc].left = t.text[i-1];
         a->nodes[nc].right = t.text[i+1];
+        a->nodes[nc].prec = 2;
+        a->nodes[nc].cursor = nc;
         nc++;
         break;
       default:
-
         break;
     }
   }
