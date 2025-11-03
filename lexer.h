@@ -40,6 +40,8 @@ typedef struct {
   symbol_bhv *behaviour;
   unsigned int *cursor_skip;
   symbols *previous_token;
+  float *fval;
+  int *ival;
   size_t capacity;
   size_t size;
 } Token;
@@ -49,12 +51,14 @@ void token_init(Token *tok, size_t capacity) {
   tok->capacity = capacity;
   tok->size = 0;
 
-  tok->type = malloc(sizeof(symbols) * capacity);
-  tok->text = malloc(sizeof(char *) * capacity);
-  tok->text_len = malloc(sizeof(size_t) * capacity);
-  tok->behaviour = malloc(sizeof(symbol_bhv) * capacity);
-  tok->cursor_skip = malloc(sizeof(unsigned int) * capacity);
-  tok->previous_token = malloc(sizeof(symbols) * capacity);
+  tok->type           = (symbols*)malloc(sizeof(symbols) * capacity);
+  tok->text           = (char**)malloc(sizeof(char *) * capacity);
+  tok->text_len       = (size_t*)malloc(sizeof(size_t) * capacity);
+  tok->behaviour      = (symbol_bhv*)malloc(sizeof(symbol_bhv) * capacity);
+  tok->cursor_skip    = (unsigned int*)malloc(sizeof(unsigned int) * capacity);
+  tok->ival           = (int*)malloc(sizeof(int) * capacity);
+  tok->fval           = (float*)malloc(sizeof(float) * capacity);
+  tok->previous_token = (symbols*)malloc(sizeof(symbols) * capacity);
 
   assert(tok->type && tok->text && tok->text_len &&
          tok->behaviour && tok->cursor_skip && tok->previous_token);
@@ -63,12 +67,14 @@ void token_init(Token *tok, size_t capacity) {
 void token_grow(Token *tok) {
   size_t new_capacity = (tok->capacity == 0 ? 8 : tok->capacity * 2);
 
-  tok->type = realloc(tok->type, new_capacity * sizeof(symbols));
-  tok->text = realloc(tok->text, new_capacity * sizeof(char *));
-  tok->text_len = realloc(tok->text_len, new_capacity * sizeof(size_t));
-  tok->behaviour = realloc(tok->behaviour, new_capacity * sizeof(symbol_bhv));
-  tok->cursor_skip = realloc(tok->cursor_skip, new_capacity * sizeof(unsigned int));
-  tok->previous_token = realloc(tok->previous_token, new_capacity * sizeof(symbols));
+  tok->type = (symbols*)realloc(tok->type, new_capacity * sizeof(symbols));
+  tok->text = (char**)realloc(tok->text, new_capacity * sizeof(char *));
+  tok->text_len = (size_t*)realloc(tok->text_len, new_capacity * sizeof(size_t));
+  tok->behaviour = (symbol_bhv*)realloc(tok->behaviour, new_capacity * sizeof(symbol_bhv));
+  tok->cursor_skip = (unsigned int*)realloc(tok->cursor_skip, new_capacity * sizeof(unsigned int));
+  tok->ival = (int*)realloc(tok->ival, new_capacity * sizeof(int));
+  tok->fval = (float*)realloc(tok->fval, new_capacity * sizeof(float));
+  tok->previous_token = (symbols*)realloc(tok->previous_token, new_capacity * sizeof(symbols));
 
   assert(tok->type && tok->text && tok->text_len &&
          tok->behaviour && tok->cursor_skip && tok->previous_token);
