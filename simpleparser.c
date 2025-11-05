@@ -72,16 +72,79 @@ void construct_nodes(ASTTree* a, Token t){
   a->size = nc;
 }
 
+
+// void eval(ASTTree *tree){
+//   for (size_t i=0; i<tree->size; ++i){
+//   ASTNode curr = tree->nodes[i];
+//   size_t n = tree->size;
+//   float total = 0.0f;
+//   switch (curr.node){
+//       case TOKEN_PLUS:
+//         if (tree->size > 1){
+//           for (size_t i=0; i<tree->size; ++i){
+//             total += atof(tree->nodes[i].left) + atof(tree->nodes[i].right);
+//           }
+//           // for (size_t i=0; i<n; i++ && n--){
+//           //   total -= 
+//           // }
+//         }
+//         for (size_t i=0; i<tree->size && (tree->size%i != 0); ++i){
+//           // total -= atof(tree->nodes[i].right); 
+//           printf("%zu\n", i);
+//         }
+        
+//         printf("%f\n", total);
+//         break;
+//       default:
+//         break;
+//     }
+//   }
+// }
+
+
+void eval(ASTTree* tree) {
+    if (!tree || !tree->nodes || tree->size == 0) {
+        fprintf(stderr, "Invalid or empty ASTTree\n");
+        return;
+    }
+
+    float total = 0.0f;
+    int initialized = 0;
+
+    for (size_t i = 0; i < tree->size; ++i) {
+        ASTNode* curr = &tree->nodes[i];
+
+        switch (curr->node) {
+            case TOKEN_PLUS:
+                if (!initialized && curr->left) {
+                    total = atof(curr->left);
+                    initialized = 1;
+                }
+                if (curr->right)
+                    total += atof(curr->right);
+                break;
+
+
+            default:
+                fprintf(stderr, "Unknown token at node %zu\n", i);
+                break;
+        }
+    }
+
+    printf("Result: %.2f\n", total);
+}
+
+
 int main(int argc, char** argv){
-  Token tokens = tokenize_all("1+2 3-4 1/2 2*7"); //invalid syntax
+  // Token tokens = tokenize_all("1+2 3-4 1/2 2*7"); //invalid syntax
+  Token tokens = tokenize_all("1+2+3+4"); //invalid syntax
   ASTTree tree = {0};
   construct_nodes(&tree, tokens);
-  printf("node count: %zu\n", tree.size);
-  for (size_t i=0; i<tree.size; ++i){
-    printf("op: %s, left: %s right: %s\n",
-          token_type_to_string(tree.nodes[i].node),
-          tree.nodes[i].left,
-          tree.nodes[i].right);
-  }
+  eval(&tree);
+  // for (size_t i=0; i<tree.size; ++i){
+  //   ASTNode curr = tree.nodes[i];
+  //   printf("token: %s\n", token_type_to_string(curr.node));
+  //   printf("left: %s right: %s\n", curr.left, curr.right);
+  // }
 }
   

@@ -13,10 +13,11 @@ typedef enum {
   TOKEN_INTEGER,
   TOKEN_FLOAT,
   TOKEN_SPACE,
-  TOKEN_STRING,
+  TOKEN_STRING, // idx 5 
+  TOKEN_IDENTIFIER,
   TOKEN_MUL,
   TOKEN_DIV,
-  TOKEN_UNKNOWN,
+  TOKEN_UNKNOWN, // idx 9 
   TOKEN_EOF,
   TOKEN_NEWLINE,
   TOKEN_LPAREN,
@@ -30,6 +31,7 @@ typedef enum {
   BHV_NUMBER,
   BHV_STRING,
   BHV_FLOAT,
+  BHV_IDENT,
 } symbol_bhv;
 
 
@@ -152,28 +154,36 @@ size_t read_from_tok(Token *tok, const char *input, size_t cursor) {
     } else {
       token_push(tok, TOKEN_FLOAT, buf, BHV_FLOAT, cursor - start);
     }
-  } else if (isalpha(input[cursor])) {
+  }  else if (isalpha(input[cursor]) && input[cursor] == '"'){
+      cursor++;
+      while(isalpha(input[cursor]) != '"' && input[cursor] != '\0'){
+        buf[i++] = input[cursor++];
+    }
+    buf[i] = '\0';
+    if (input[cursor] == '"') cursor ++;
+    token_push(tok, TOKEN_STRING, buf, BHV_STRING, cursor - start);
+  } else if (isalpha(input[cursor])) { // should be after checking for strlit
     while (isalpha(input[cursor])) {
       buf[i++] = input[cursor++];
     }
     buf[i] = '\0';
-    token_push(tok, TOKEN_STRING, buf, BHV_STRING, cursor - start); 
+    token_push(tok, TOKEN_IDENTIFIER, buf, BHV_IDENT, cursor - start); 
     //refactor into separate function to use in parsing functions and definitions  
   } else {
-    buf[0] = input[cursor];
-    buf[1] = '\0';
-    switch (input[cursor]) {
-      case '+': token_push(tok, TOKEN_PLUS, "+", BHV_STACK, 1); break;
-      case '-': token_push(tok, TOKEN_MINUS, "-", BHV_STACK, 1); break;
-      case '*': token_push(tok, TOKEN_MUL, "*", BHV_STACK, 1); break;
-      case '/': token_push(tok, TOKEN_DIV, "/", BHV_STACK, 1); break;
-      case ' ': token_push(tok, TOKEN_SPACE, " ", BHV_UNDEFINED, 1); break;
-      case '\n': token_push(tok, TOKEN_NEWLINE, "\\n", BHV_UNDEFINED, 1); break;
-      case '(': token_push(tok, TOKEN_LPAREN, "(", BHV_STACK, 1); break;
-      case ')': token_push(tok, TOKEN_RPAREN, ")", BHV_STACK, 1); break;
-      case ',': token_push(tok, TOKEN_COMMA, ",", BHV_STACK, 1); break;
-      default: token_push(tok, TOKEN_UNKNOWN, buf, BHV_UNDEFINED, 1); break;
-    }
+      buf[0] = input[cursor];
+      buf[1] = '\0';
+      switch (input[cursor]) {
+        case '+': token_push(tok, TOKEN_PLUS, "+", BHV_STACK, 1); break;
+        case '-': token_push(tok, TOKEN_MINUS, "-", BHV_STACK, 1); break;
+        case '*': token_push(tok, TOKEN_MUL, "*", BHV_STACK, 1); break;
+        case '/': token_push(tok, TOKEN_DIV, "/", BHV_STACK, 1); break;
+        case ' ': token_push(tok, TOKEN_SPACE, " ", BHV_UNDEFINED, 1); break;
+        case '\n': token_push(tok, TOKEN_NEWLINE, "\\n", BHV_UNDEFINED, 1); break;
+        case '(': token_push(tok, TOKEN_LPAREN, "(", BHV_STACK, 1); break;
+        case ')': token_push(tok, TOKEN_RPAREN, ")", BHV_STACK, 1); break;
+        case ',': token_push(tok, TOKEN_COMMA, ",", BHV_STACK, 1); break;
+        default: token_push(tok, TOKEN_UNKNOWN, buf, BHV_UNDEFINED, 1); break;
+      }
     cursor++;
   }
 
