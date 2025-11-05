@@ -35,9 +35,32 @@ typedef enum {
 } symbol_bhv;
 
 
+
+char *token_type_to_string(symbols type) {
+  switch (type) {
+    case TOKEN_PLUS: return "TOKEN_PLUS";
+    case TOKEN_MINUS: return "TOKEN_MINUS";
+    case TOKEN_INTEGER: return "TOKEN_INTEGER";
+    case TOKEN_FLOAT: return "TOKEN_FLOAT";
+    case TOKEN_SPACE: return "TOKEN_SPACE";
+    case TOKEN_STRING: return "TOKEN_STRING";
+    case TOKEN_MUL: return "TOKEN_MUL";
+    case TOKEN_DIV: return "TOKEN_DIV";
+    case TOKEN_LPAREN: return "TOKEN_LPAREN";
+    case TOKEN_RPAREN: return "TOKEN_RPAREN";
+    case TOKEN_COMMA: return "TOKEN_COMMA";
+    case TOKEN_EOF: return "TOKEN_EOF";
+    case TOKEN_NEWLINE: return "TOKEN_NEWLINE";
+    case TOKEN_IDENTIFIER: return "TOKEN_IDENTIFIER";
+    case TOKEN_UNKNOWN: return "TOKEN_UNKNOWN";
+    // default: return "UNKNOWN_SYMBOL";
+  }
+}
+
 typedef struct {
   symbols *type;
   char **text;
+  char **tktype;
   size_t *text_len;
   symbol_bhv *behaviour;
   unsigned int *cursor_skip;
@@ -57,7 +80,7 @@ void token_init(Token *tok, size_t capacity) {
   tok->behaviour = malloc(sizeof(symbol_bhv) * capacity);
   tok->cursor_skip = malloc(sizeof(unsigned int) * capacity);
   tok->previous_token = malloc(sizeof(symbols) * capacity);
-
+  tok->tktype = malloc(sizeof(char*) * capacity);
   assert(tok->type && tok->text && tok->text_len &&
          tok->behaviour && tok->cursor_skip && tok->previous_token);
 }
@@ -71,7 +94,7 @@ void token_grow(Token *tok) {
   tok->behaviour = realloc(tok->behaviour, new_capacity * sizeof(symbol_bhv));
   tok->cursor_skip = realloc(tok->cursor_skip, new_capacity * sizeof(unsigned int));
   tok->previous_token = realloc(tok->previous_token, new_capacity * sizeof(symbols));
-
+  tok->tktype = realloc(tok->tktype, new_capacity*sizeof(char*));
   assert(tok->type && tok->text && tok->text_len &&
          tok->behaviour && tok->cursor_skip && tok->previous_token);
 
@@ -91,7 +114,8 @@ void token_push(Token *tok, symbols type, const char *text,
   tok->text_len[i] = strlen(text);
   tok->behaviour[i] = behaviour;
   tok->cursor_skip[i] = cursor_skip;
-
+  tok->tktype[i] = token_type_to_string(tok->type[i]);
+  
   if (i > 0)
     tok->previous_token[i] = tok->type[i - 1];
   else
@@ -116,26 +140,6 @@ void token_free(Token *tok) {
 int str_to_int(char *strint) { return atoi(strint); }
 float str_to_float(char *strif) { return strtof(strif, NULL); }
 
-char *token_type_to_string(symbols type) {
-  switch (type) {
-    case TOKEN_PLUS: return "TOKEN_PLUS";
-    case TOKEN_MINUS: return "TOKEN_MINUS";
-    case TOKEN_INTEGER: return "TOKEN_INTEGER";
-    case TOKEN_FLOAT: return "TOKEN_FLOAT";
-    case TOKEN_SPACE: return "TOKEN_SPACE";
-    case TOKEN_STRING: return "TOKEN_STRING";
-    case TOKEN_MUL: return "TOKEN_MUL";
-    case TOKEN_DIV: return "TOKEN_DIV";
-    case TOKEN_LPAREN: return "TOKEN_LPAREN";
-    case TOKEN_RPAREN: return "TOKEN_RPAREN";
-    case TOKEN_COMMA: return "TOKEN_COMMA";
-    case TOKEN_EOF: return "TOKEN_EOF";
-    case TOKEN_NEWLINE: return "TOKEN_NEWLINE";
-    case TOKEN_UNKNOWN: return "TOKEN_UNKNOWN";
-    default: return "UNKNOWN_SYMBOL";
-  }
-}
-
 
 size_t read_from_tok(Token *tok, const char *input, size_t cursor) {
   char buf[64];
@@ -154,10 +158,11 @@ size_t read_from_tok(Token *tok, const char *input, size_t cursor) {
     } else {
       token_push(tok, TOKEN_FLOAT, buf, BHV_FLOAT, cursor - start);
     }
-  }  else if (isalpha(input[cursor]) && input[cursor] == '"'){
+  }  else if (input[cursor] == '"'){
       cursor++;
-      while(isalpha(input[cursor]) != '"' && input[cursor] != '\0'){
+      while(input[cursor] != '"' && input[cursor] != '\0'){
         buf[i++] = input[cursor++];
+        if (i >=  sizeof(buf) - 1) break;
     }
     buf[i] = '\0';
     if (input[cursor] == '"') cursor ++;
