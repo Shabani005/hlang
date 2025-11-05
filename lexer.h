@@ -148,6 +148,7 @@ size_t read_from_tok(Token *tok, const char *input, size_t cursor) {
 
   if (isdigit(input[cursor])) {
     int dots_seen = 0;
+    // dont allow for 3.3.3 (example)
     while (isdigit(input[cursor]) || input[cursor] == '.') {
       if (input[cursor] == '.') dots_seen++;
       buf[i++] = input[cursor++];
