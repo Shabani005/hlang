@@ -8,6 +8,7 @@ int main(int argc, char **argv){
 
   nb_append(&cmd, "gcc");
   nb_append(&cmd, "-Wall -Wextra");
+  nb_append(&cmd, "-static");
   nb_append(&cmd, "./src/vm.c");
   nb_append(&cmd, "-o vm");
   nb_cmd(&cmd); 
