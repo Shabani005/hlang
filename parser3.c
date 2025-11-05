@@ -1,5 +1,34 @@
 #include "./lexer.h"
 
+int get_prec(symbols op){
+  switch (op) {
+    case TOKEN_MUL:
+    case TOKEN_DIV:
+       return 2; break;
+    case TOKEN_PLUS:
+    case TOKEN_MINUS:
+      return 1; break;
+    default: return 0;
+  }
+}
+// parse
+
+bool is_left_asc(symbols op){
+  switch (op) {
+    case TOKEN_MUL:
+    case TOKEN_DIV:
+    case TOKEN_PLUS:
+    case TOKEN_MINUS:
+      return true; break;
+    default: return false;
+  }
+}
+
+void build_rpn();
+
+
+
+
 
 int main(void){
   const char ts[] = "\"hello\" hi + 2"; 
