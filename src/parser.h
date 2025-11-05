@@ -1,6 +1,6 @@
 #include "./lexer.h"
 #define NB_IMPLEMENTATION
-#include "./nb.h"
+#include "../nb.h"
 
 int get_prec(symbols op){
   switch (op) {
