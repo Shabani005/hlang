@@ -2,9 +2,9 @@
 > Uninished, Not meant to be used by others. idk if it works on windows.
 ----------
 
-## Simple Interpreter implemented in C. 
+## Simple programming language VM implemented in C. (look at examples folder) 
 Usage:
 ```
 cc -o builder nob.c
-./builder
+./builder <source file>
 ```
