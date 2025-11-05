@@ -199,21 +199,21 @@ void print_token(Token *tk){
 
 
 
-int main(int argc, char **argv){
-  if (argc < 2) return -1;
-  const char ts[] = "\"hello\" hi + 2 2.312"; 
-  const char math[] = "print(((1+2)*6)/18)"; // = 1
-  const char print[] = "print(\"hello\")";
-  const char simple[] = "1 + (  3 + 3  )/4+4*3";
+// int main(int argc, char **argv){
+//   if (argc < 2) return -1;
+//   const char ts[] = "\"hello\" hi + 2 2.312"; 
+//   const char math[] = "print(((1+2)*6)/18)"; // = 1
+//   const char print[] = "print(\"hello\")";
+//   const char simple[] = "1 + (  3 + 3  )/4+4*3";
   
 
-  char* read = nb_read_file(argv[1]);
-  Token tk = tokenize_all(read);
-  printf("INPUT: %s\n", read);
-  SymbolTable table = {0};
-  symbol_table_init(&table, 32);
+//   char* read = nb_read_file(argv[1]);
+//   Token tk = tokenize_all(read);
+//   printf("INPUT: %s\n", read);
+//   SymbolTable table = {0};
+//   symbol_table_init(&table, 32);
 
 
-  Token rpn = build_rpn(&tk, &table);
-  print_token(&rpn); 
-}
+//   Token rpn = build_rpn(&tk, &table);
+//   print_token(&rpn); 
+// }

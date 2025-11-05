@@ -22,7 +22,11 @@ typedef enum {
   TOKEN_NEWLINE,
   TOKEN_LPAREN,
   TOKEN_RPAREN,
-  TOKEN_COMMA
+  TOKEN_COMMA,
+  TOKEN_LCURLY,
+  TOKEN_RCURLY,
+  TOKEN_COLON,
+  TOKEN_SEMI
 } symbols;
 
 typedef enum {
@@ -52,6 +56,10 @@ char *token_type_to_string(symbols type) {
     case TOKEN_EOF: return "TOKEN_EOF";
     case TOKEN_NEWLINE: return "TOKEN_NEWLINE";
     case TOKEN_IDENTIFIER: return "TOKEN_IDENTIFIER";
+    case TOKEN_LCURLY: return "TOKEN_LCURLY";
+    case TOKEN_RCURLY: return "TOKEN_RCURLY";
+    case TOKEN_SEMI: return "TOKEN_SEMI";
+    case TOKEN_COLON: return "TOKEN_COLON";
     case TOKEN_UNKNOWN: return "TOKEN_UNKNOWN";
     // default: return "UNKNOWN_SYMBOL";
   }
@@ -141,60 +149,89 @@ int str_to_int(char *strint) { return atoi(strint); }
 float str_to_float(char *strif) { return strtof(strif, NULL); }
 
 
+
 size_t read_from_tok(Token *tok, const char *input, size_t cursor) {
   char buf[64];
   size_t start = cursor;
   size_t i = 0;
 
-  if (isdigit(input[cursor])) {
+  if (isdigit((unsigned char)input[cursor])) {
     int dots_seen = 0;
-    // dont allow for 3.3.3 (example)
-    while (isdigit(input[cursor]) || input[cursor] == '.') {
+    while (isdigit((unsigned char)input[cursor]) || input[cursor] == '.') {
       if (input[cursor] == '.') dots_seen++;
       buf[i++] = input[cursor++];
+      if (i >= sizeof(buf) - 1) break;
     }
     buf[i] = '\0';
-    if (dots_seen == 0) {
-      token_push(tok, TOKEN_INTEGER, buf, BHV_NUMBER, cursor - start);
-    } else {
-      token_push(tok, TOKEN_FLOAT, buf, BHV_FLOAT, cursor - start);
-    }
-  }  else if (input[cursor] == '"'){
-      cursor++;
-      while(input[cursor] != '"' && input[cursor] != '\0'){
-        buf[i++] = input[cursor++];
-        if (i >=  sizeof(buf) - 1) break;
-    }
-    buf[i] = '\0';
-    if (input[cursor] == '"') cursor ++;
-    token_push(tok, TOKEN_STRING, buf, BHV_STRING, cursor - start);
-  } else if (isalpha(input[cursor])) { // should be after checking for strlit
-    while (isalpha(input[cursor])) {
-      buf[i++] = input[cursor++];
-    }
-    buf[i] = '\0';
-    token_push(tok, TOKEN_IDENTIFIER, buf, BHV_IDENT, cursor - start); 
-    //refactor into separate function to use in parsing functions and definitions  
-  } else {
-      buf[0] = input[cursor];
-      buf[1] = '\0';
-      switch (input[cursor]) {
-        case '+': token_push(tok, TOKEN_PLUS, "+", BHV_STACK, 1); break;
-        case '-': token_push(tok, TOKEN_MINUS, "-", BHV_STACK, 1); break;
-        case '*': token_push(tok, TOKEN_MUL, "*", BHV_STACK, 1); break;
-        case '/': token_push(tok, TOKEN_DIV, "/", BHV_STACK, 1); break;
-        case ' ': token_push(tok, TOKEN_SPACE, " ", BHV_UNDEFINED, 1); break;
-        case '\n': token_push(tok, TOKEN_NEWLINE, "\\n", BHV_UNDEFINED, 1); break;
-        case '(': token_push(tok, TOKEN_LPAREN, "(", BHV_STACK, 1); break;
-        case ')': token_push(tok, TOKEN_RPAREN, ")", BHV_STACK, 1); break;
-        case ',': token_push(tok, TOKEN_COMMA, ",", BHV_STACK, 1); break;
-        default: token_push(tok, TOKEN_UNKNOWN, buf, BHV_UNDEFINED, 1); break;
-      }
-    cursor++;
+    token_push(tok, dots_seen == 0 ? TOKEN_INTEGER : TOKEN_FLOAT,
+               buf, dots_seen == 0 ? BHV_NUMBER : BHV_FLOAT,
+               cursor - start);
+    return cursor - start; // all digits handled
   }
 
+  else if (input[cursor] == '"') {
+    cursor++; // skip opening quote
+    while (input[cursor] != '"' && input[cursor] != '\0') {
+      buf[i++] = input[cursor++];
+      if (i >= sizeof(buf) - 1) break;
+    }
+    buf[i] = '\0';
+    if (input[cursor] == '"') cursor++; // skip closing quote
+    token_push(tok, TOKEN_STRING, buf, BHV_STRING, cursor - start);
+    return cursor - start;
+  }
+
+  else if (isalpha((unsigned char)input[cursor])) {
+    while (isalpha((unsigned char)input[cursor])) {
+      buf[i++] = input[cursor++];
+      if (i >= sizeof(buf) - 1) break;
+    }
+    buf[i] = '\0';
+    token_push(tok, TOKEN_IDENTIFIER, buf, BHV_IDENT, cursor - start);
+    return cursor - start;
+  }
+
+  // Single-character tokens and symbols
+  switch (input[cursor]) {
+    case '+': token_push(tok, TOKEN_PLUS, "+", BHV_STACK, 1); break;
+    case '-': token_push(tok, TOKEN_MINUS, "-", BHV_STACK, 1); break;
+    case '*': token_push(tok, TOKEN_MUL, "*", BHV_STACK, 1); break;
+    case '/': token_push(tok, TOKEN_DIV, "/", BHV_STACK, 1); break;
+    case '{': token_push(tok, TOKEN_LCURLY, "{", BHV_STACK, 1); break;
+    case '}': token_push(tok, TOKEN_RCURLY, "}", BHV_STACK, 1); break;
+    case ';': token_push(tok, TOKEN_SEMI, ";", BHV_STACK, 1); break;
+    case ':': token_push(tok, TOKEN_COLON, ":", BHV_STACK, 1); break;
+
+    case '(':
+      token_push(tok, TOKEN_LPAREN, "(", BHV_STACK, 1);
+      break;
+    case ')':
+      token_push(tok, TOKEN_RPAREN, ")", BHV_STACK, 1);
+      break;
+    case ',':
+      token_push(tok, TOKEN_COMMA, ",", BHV_STACK, 1);
+      break;
+    case ' ':
+      // you can skip space tokens if you don't need them
+      token_push(tok, TOKEN_SPACE, " ", BHV_UNDEFINED, 1);
+      break;
+    case '\n':
+      token_push(tok, TOKEN_NEWLINE, "\\n", BHV_UNDEFINED, 1);
+      break;
+    case '\0':
+      return 0; // end of input
+    default: {
+      buf[0] = input[cursor];
+      buf[1] = '\0';
+      token_push(tok, TOKEN_UNKNOWN, buf, BHV_UNDEFINED, 1);
+      break;
+    }
+  }
+
+  cursor++; // move forward exactly one char for symbol cases
   return cursor - start;
 }
+
 
 Token tokenize_all(const char *input) {
   Token tok;

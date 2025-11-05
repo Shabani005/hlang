@@ -8,12 +8,12 @@ int main(int argc, char **argv){
 
   nb_append(&cmd, "gcc");
   nb_append(&cmd, "-Wall -Wextra");
-  nb_append(&cmd, "lexer.c");
-  nb_append(&cmd, "-o lex");
+  nb_append(&cmd, "vm.c");
+  nb_append(&cmd, "-o vm");
   nb_cmd(&cmd); 
 
 
-  nb_append(&cmd, "./lex");
+  nb_append(&cmd, "./vm");
   for (int i=1; i<argc; ++i){
     nb_append(&cmd, argv[i]);
   }
