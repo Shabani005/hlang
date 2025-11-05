@@ -61,7 +61,7 @@ char *token_type_to_string(symbols type) {
     case TOKEN_SEMI: return "TOKEN_SEMI";
     case TOKEN_COLON: return "TOKEN_COLON";
     case TOKEN_UNKNOWN: return "TOKEN_UNKNOWN";
-    // default: return "UNKNOWN_SYMBOL";
+    default: return "UNKNOWN_SYMBOL";
   }
 }
 

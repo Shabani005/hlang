@@ -44,9 +44,9 @@ typedef struct {
 } Symbol;
 
 
-static Symbol builtins[] = {
-    { "print", 1, 1, { TOKEN_UNKNOWN }, TOKEN_EOF, SYM_FUNC, true },
-};
+// static Symbol builtins[] = {
+//     { "print", 1, 1, { TOKEN_UNKNOWN }, TOKEN_EOF, SYM_FUNC, true },
+// };
 
 
 typedef struct {
@@ -56,12 +56,12 @@ typedef struct {
 } SymbolTable; 
 
 
-static int builtin_num = sizeof(builtins)/sizeof(builtins[0]);
+// static int builtin_num = sizeof(builtins)/sizeof(builtins[0]);
 
-static SymbolTable global_env = {
-  .size = sizeof(builtins)/sizeof(builtins[0]),
-  .capacity = sizeof(builtins)/sizeof(builtins[0]),
-  .symbols = builtins};
+// static SymbolTable global_env = {
+//   .size = sizeof(builtins)/sizeof(builtins[0]),
+//   .capacity = sizeof(builtins)/sizeof(builtins[0]),
+//   .symbols = builtins};
 
 
 Symbol *symbol_lookup(SymbolTable *table, const char *n){
