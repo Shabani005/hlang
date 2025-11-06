@@ -172,33 +172,29 @@ void vm_run(VM *vm) {
     }
 }
 
-int main(int argc, char **argv) {
-    if (argc < 2) {
-        fprintf(stderr, "Usage: %s <source file>\n", argv[0]);
-        return 1;
+char *op_to_str(OPcode o){
+  switch (o){  
+  case OP_ADD: return "OP_ADD"; break;
+  case OP_SUB: return "OP_SUB"; break;
+  case OP_MUL: return "OP_MUL"; break;
+  case OP_DIV: return "OP_DIV"; break;
+  case OP_PRINT: return "OP_ADD"; break;
+  case OP_HALT: return "OP_HALT"; break;
+  default: break;
     }
-
-    char* read = nb_read_file(argv[1]);
-    //printf("INPUT: %s\n", read);
-
-    Token tk = tokenize_all(read);
-    SymbolTable table = {0};
-    symbol_table_init(&table, 32);
-
-    Token rpn = build_rpn(&tk, &table);
-    //print_token(&rpn);
-
-    size_t prog_size = 0;
-    instruct *prog = rpn_to_bytecode(&rpn, &prog_size);
-    VM vm = {
-        .program = prog,
-        .program_size = prog_size,
-        .inst_p = 0,
-        .st_p = 0,
-        .running = true,
-    };
-
-    vm_run(&vm);
-
-    return 0;
+    return NULL;
 }
+
+void emit_bytecode(VM *v){
+    size_t i =0;
+    while (i < v->program_size){
+        if (v->program[i].op == OP_PUSH_INT) printf("OP_PUSH_INT(%f)\n", v->program[i].num);
+        else if (v->program[i].op == OP_PUSH_FLOAT) printf("OP_PUSH_FLOAT(%f)\n", v->program[i].num);        
+        else if (v->program[i].op == OP_PUSH_STRING) printf("OP_PUSH_STRING(\"%s\")\n", v->program[i].strlit);
+        else printf("%s\n", op_to_str(v->program[i].op));
+        i++;
+    }
+    printf("\n");
+}
+
+
