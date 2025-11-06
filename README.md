@@ -5,6 +5,6 @@
 ## Simple programming language VM implemented in C. (look at examples folder) 
 Usage:
 ```
-cc -o builder nob.c
+cc -o builder builder.c
 ./builder <source file>
 ```
