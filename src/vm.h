@@ -178,7 +178,7 @@ char *op_to_str(OPcode o){
   case OP_SUB: return "OP_SUB"; break;
   case OP_MUL: return "OP_MUL"; break;
   case OP_DIV: return "OP_DIV"; break;
-  case OP_PRINT: return "OP_ADD"; break;
+  case OP_PRINT: return "OP_PRINT"; break;
   case OP_HALT: return "OP_HALT"; break;
   default: break;
     }
