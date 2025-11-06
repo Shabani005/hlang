@@ -26,7 +26,10 @@ typedef enum {
   TOKEN_LCURLY,
   TOKEN_RCURLY,
   TOKEN_COLON,
-  TOKEN_SEMI
+  TOKEN_SEMI,
+  TOKEN_FN,
+  TOKEN_LET,
+  TOKEN_IDENT_INT //TODO: unhardcode
 } symbols;
 
 typedef enum {
@@ -61,6 +64,9 @@ char *token_type_to_string(symbols type) {
     case TOKEN_SEMI: return "TOKEN_SEMI";
     case TOKEN_COLON: return "TOKEN_COLON";
     case TOKEN_UNKNOWN: return "TOKEN_UNKNOWN";
+    case TOKEN_FN: return "TOKEN_FN";
+    case TOKEN_LET: return "TOKEN_LET";
+    case TOKEN_IDENT_INT: return "TOKEN_IDENT_INT";
     default: return "UNKNOWN_SYMBOL";
   }
 }
@@ -187,7 +193,12 @@ size_t read_from_tok(Token *tok, const char *input, size_t cursor) {
       if (i >= sizeof(buf) - 1) break;
     }
     buf[i] = '\0';
-    token_push(tok, TOKEN_IDENTIFIER, buf, BHV_IDENT, cursor - start);
+    
+    if (strcmp(buf, "let") == 0) token_push(tok, TOKEN_LET, buf, BHV_UNDEFINED, cursor - start);
+    else if (strcmp(buf, "fn") == 0) token_push(tok, TOKEN_FN, buf, BHV_UNDEFINED, cursor - start);
+    else if (strcmp(buf, "int") == 0) token_push(tok, TOKEN_IDENT_INT, buf, BHV_UNDEFINED, cursor - start); // TODO: unhardcode
+    else token_push(tok, TOKEN_IDENTIFIER, buf, BHV_IDENT, cursor - start);
+
     return cursor - start;
   }
 

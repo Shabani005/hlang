@@ -79,9 +79,9 @@ Symbol *symbol_lookup(SymbolTable *table, const char *n){
 
 
 void symbol_table_init(SymbolTable *table, size_t initial_capacity) {
-    table->symbols = malloc(sizeof(Symbol) * initial_capacity);
+    table->symbols = (Symbol*)malloc(sizeof(Symbol) * initial_capacity);
     if (!table->symbols) {
-        fprintf(stderr, "symbol_table_init: malloc failed\n");
+        fprintf(stderr, "symbol_table_init: malloc failed\n"); // should not happen
         exit(1);
     }
     table->size = 0;
@@ -91,7 +91,7 @@ void symbol_table_init(SymbolTable *table, size_t initial_capacity) {
 void symbol_table_add(SymbolTable *table, Symbol sym) {
     if (table->size >= table->capacity) {
         table->capacity = (table->capacity == 0) ? 8 : table->capacity * 2;
-        table->symbols = realloc(table->symbols, sizeof(Symbol) * table->capacity);
+        table->symbols = (Symbol*)realloc(table->symbols, sizeof(Symbol) * table->capacity);
         if (!table->symbols) {
             fprintf(stderr, "symbol_table_add: realloc failed\n");
             exit(1);
@@ -194,6 +194,82 @@ void print_token(Token *tk){
   for (size_t i=0; i<tk->size; ++i){
     printf("TokenNum: %zu Type: %s Value: %s\n", i, tk->tktype[i], tk->text[i]);
   }
+}
+
+
+Token parse_func_def(Token *inp, size_t *idx, SymbolTable *sym){
+  if (inp->type[*idx] != TOKEN_FN){
+    fprintf(stderr, "Expected 'fn'\n");
+    exit(1);
+  }
+  (*idx)++;
+
+  if (inp->type[*idx] != TOKEN_IDENTIFIER){
+    fprintf(stderr, "Expected function name after 'fn'\n");
+    exit(1);
+  }
+  const char* fname = inp->text[*idx];
+  (*idx)++;
+
+  if (inp->type[*idx] != TOKEN_LPAREN){
+    fprintf(stderr, "Expected '('\n");
+    exit(1);
+  }
+  (*idx)++;
+
+  Symbol func = {0};
+  func.name = strdup(fname);
+  func.symbol_kind = SYM_FUNC;
+  func.ret_type = TOKEN_UNKNOWN;
+  func.arg_count = 0;
+  func.builtin = false;
+
+  while (inp->type[*idx] != TOKEN_RPAREN){
+    
+    if (inp->type[*idx] != TOKEN_IDENTIFIER){
+      fprintf(stderr, "Expected Arg Name\n");
+      exit(1);
+    }
+    // save THIS TOKEN NAME AS VARIABLE PROBABLY.
+    (*idx)++;
+    
+    if (inp->type[*idx] != TOKEN_COLON){
+      fprintf(stderr, "Expected ':' after arg name\n");
+      exit(1);
+    }
+    func.arg_count++;
+    (*idx)++;
+
+    if (inp->type[*idx] != TOKEN_IDENT_INT){ // TODO: unharcode should be easy just keep it as TOKEN_IDENTIFIER
+      fprintf(stderr, "Expected Type after ':'\n"); // BUT NEED TO CHECK TABLE IF WE DO ^
+      exit(1);
+    }
+    (*idx)++;
+
+    if (inp->type[*idx] != TOKEN_COMMA){
+      fprintf(stderr, "Expected Comma after type\n");
+      exit(1);
+    }
+    (*idx)++;
+
+  }
+    if (inp->type[*idx != TOKEN_IDENTIFIER]){
+      fprintf(stderr, "Expected return type after ')'\n");
+      exit(1);
+    }
+    func.ret_type = inp->type[*idx]; // probably wont work for serious typing.
+    (*idx)++;
+
+    if (inp->type[*idx] != TOKEN_LCURLY){
+      fprintf(stderr, "Expected Left Curly Bracket '{'\n");
+      exit(1);
+    }
+    (*idx)++;
+
+    while (inp->type[*idx] != TOKEN_RCURLY){
+      // FULL PARSING LOGIC SHOULD BE HERE 
+      // let (definiton parser should be alone)
+    }
 }
 
 
