@@ -224,32 +224,40 @@ Token parse_func_def(Token *inp, size_t *idx, SymbolTable *sym){
   func.arg_count = 0;
   func.builtin = false;
 
+  SymbolTable args = {0};
   while (inp->type[*idx] != TOKEN_RPAREN){
     
     if (inp->type[*idx] != TOKEN_IDENTIFIER){
       fprintf(stderr, "Expected Arg Name\n");
       exit(1);
     }
-    // save THIS TOKEN NAME AS VARIABLE PROBABLY.
+    Symbol arg = {0};
+    arg.name = strdup(inp->text[*idx]);
+    arg.arg_types[func.arg_count] = inp->type[*idx];
+    arg.builtin = false;
+    arg.symbol_kind = SYM_VAR;
+    // symbol_table_add(&args, arg); // TODO: do this after parsing arg type
     (*idx)++;
-    
+        
     if (inp->type[*idx] != TOKEN_COLON){
       fprintf(stderr, "Expected ':' after arg name\n");
       exit(1);
     }
-    func.arg_count++;
+    // func.arg_count++;
     (*idx)++;
 
     if (inp->type[*idx] != TOKEN_IDENT_INT){ // TODO: unharcode should be easy just keep it as TOKEN_IDENTIFIER
       fprintf(stderr, "Expected Type after ':'\n"); // BUT NEED TO CHECK TABLE IF WE DO ^
       exit(1);
     }
+    arg.arg_types[func.arg_count] = inp->type[*idx];
     (*idx)++;
 
     if (inp->type[*idx] != TOKEN_COMMA){
       fprintf(stderr, "Expected Comma after type\n");
       exit(1);
     }
+    func.arg_count++; // PROBABLY THE RIGHT PLACE TO DO THIS
     (*idx)++;
 
   }
