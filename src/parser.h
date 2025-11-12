@@ -286,10 +286,12 @@ Token parse_func_def(Token *inp, size_t *idx, SymbolTable *sym){
         fprintf(stderr, "At Token %zu\n", *idx);
 
       }
+    // (*idx)++;
+    // skip_space(inp, idx);
+    //
+  }
     (*idx)++;
     skip_space(inp, idx);
-
-  }
     if (inp->type[*idx] != TOKEN_IDENT_INT){
       fprintf(stderr, "Expected return type after ')'\n");
       exit(1);
