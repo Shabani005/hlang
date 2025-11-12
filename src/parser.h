@@ -261,7 +261,7 @@ Token parse_func_def(Token *inp, size_t *idx, SymbolTable *sym){
     (*idx)++;
 
   }
-    if (inp->type[*idx != TOKEN_IDENTIFIER]){
+    if (inp->type[*idx] != TOKEN_IDENTIFIER){
       fprintf(stderr, "Expected return type after ')'\n");
       exit(1);
     }
