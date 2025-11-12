@@ -277,6 +277,7 @@ Token parse_func_def(Token *inp, size_t *idx, SymbolTable *sym){
       // fprintf(stderr, "Expected Comma after type\n");
       // fprintf(stderr, "At Token %zu\n", *idx);
     } else if (inp->type[*idx] == TOKEN_RPAREN){
+      skip_space(inp, idx);
       break;
       // func.arg_count++; // PROBABLY THE RIGHT PLACE TO DO THIS
     // (*idx)++;
@@ -285,6 +286,7 @@ Token parse_func_def(Token *inp, size_t *idx, SymbolTable *sym){
         fprintf(stderr, "At Token %zu\n", *idx);
 
       }
+    (*idx)++;
     skip_space(inp, idx);
 
   }
