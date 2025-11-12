@@ -197,25 +197,37 @@ void print_token(Token *tk){
 }
 
 
+void skip_space(Token *inp, size_t *idx){
+  while (inp->type[*idx] == TOKEN_SPACE || inp->type[*idx] == TOKEN_NEWLINE) (*idx)++;
+}
+
 Token parse_func_def(Token *inp, size_t *idx, SymbolTable *sym){
+  skip_space(inp, idx);
   if (inp->type[*idx] != TOKEN_FN){
     fprintf(stderr, "Expected 'fn'\n");
     exit(1);
   }
   (*idx)++;
+  skip_space(inp, idx);
 
   if (inp->type[*idx] != TOKEN_IDENTIFIER){
     fprintf(stderr, "Expected function name after 'fn'\n");
     exit(1);
   }
+  skip_space(inp, idx);
+
   const char* fname = inp->text[*idx];
   (*idx)++;
+  
+  skip_space(inp, idx);
 
   if (inp->type[*idx] != TOKEN_LPAREN){
     fprintf(stderr, "Expected '('\n");
     exit(1);
   }
   (*idx)++;
+  
+  skip_space(inp, idx);
 
   Symbol func = {0};
   func.name = strdup(fname);
@@ -226,11 +238,13 @@ Token parse_func_def(Token *inp, size_t *idx, SymbolTable *sym){
 
   SymbolTable args = {0};
   while (inp->type[*idx] != TOKEN_RPAREN){
-    
-    if (inp->type[*idx] != TOKEN_IDENTIFIER){
+      if (inp->type[*idx] == TOKEN_SPACE || inp->type[*idx] == TOKEN_NEWLINE) (*idx)++;
+      if (inp->type[*idx] != TOKEN_IDENTIFIER){
       fprintf(stderr, "Expected Arg Name\n");
       exit(1);
     }
+    skip_space(inp, idx);
+
     Symbol arg = {0};
     arg.name = strdup(inp->text[*idx]);
     arg.arg_types[func.arg_count] = inp->type[*idx];
@@ -238,13 +252,15 @@ Token parse_func_def(Token *inp, size_t *idx, SymbolTable *sym){
     arg.symbol_kind = SYM_VAR;
     // symbol_table_add(&args, arg); // TODO: do this after parsing arg type
     (*idx)++;
-        
+    skip_space(inp, idx);
+     
     if (inp->type[*idx] != TOKEN_COLON){
       fprintf(stderr, "Expected ':' after arg name\n");
       exit(1);
     }
     // func.arg_count++;
     (*idx)++;
+    skip_space(inp, idx);
 
     if (inp->type[*idx] != TOKEN_IDENT_INT){ // TODO: unharcode should be easy just keep it as TOKEN_IDENTIFIER
       fprintf(stderr, "Expected Type after ':'\n"); // BUT NEED TO CHECK TABLE IF WE DO ^
@@ -252,13 +268,16 @@ Token parse_func_def(Token *inp, size_t *idx, SymbolTable *sym){
     }
     arg.arg_types[func.arg_count] = inp->type[*idx];
     (*idx)++;
+    skip_space(inp, idx);
 
     if (inp->type[*idx] != TOKEN_COMMA){
       fprintf(stderr, "Expected Comma after type\n");
+      fprintf(stderr, "At Token %zu\n", *idx);
       exit(1);
     }
     func.arg_count++; // PROBABLY THE RIGHT PLACE TO DO THIS
     (*idx)++;
+    skip_space(inp, idx);
 
   }
     if (inp->type[*idx] != TOKEN_IDENTIFIER){
@@ -267,12 +286,14 @@ Token parse_func_def(Token *inp, size_t *idx, SymbolTable *sym){
     }
     func.ret_type = inp->type[*idx]; // probably wont work for serious typing.
     (*idx)++;
+    skip_space(inp, idx);
 
     if (inp->type[*idx] != TOKEN_LCURLY){
       fprintf(stderr, "Expected Left Curly Bracket '{'\n");
       exit(1);
     }
     (*idx)++;
+    skip_space(inp, idx);
 
     while (inp->type[*idx] != TOKEN_RCURLY){
       // FULL PARSING LOGIC SHOULD BE HERE 
