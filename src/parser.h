@@ -201,118 +201,110 @@ void skip_space(Token *inp, size_t *idx){
   while (inp->type[*idx] == TOKEN_SPACE || inp->type[*idx] == TOKEN_NEWLINE) (*idx)++;
 }
 
-Token parse_func_def(Token *inp, size_t *idx, SymbolTable *sym){
-  skip_space(inp, idx);
-  if (inp->type[*idx] != TOKEN_FN){
-    fprintf(stderr, "Expected 'fn'\n");
-    exit(1);
-  }
-  (*idx)++;
-  skip_space(inp, idx);
-
-  if (inp->type[*idx] != TOKEN_IDENTIFIER){
-    fprintf(stderr, "Expected function name after 'fn'\n");
-    exit(1);
-  }
-  skip_space(inp, idx);
-
-  const char* fname = inp->text[*idx];
-  (*idx)++;
-  
-  skip_space(inp, idx);
-
-  if (inp->type[*idx] != TOKEN_LPAREN){
-    fprintf(stderr, "Expected '('\n");
-    exit(1);
-  }
-  (*idx)++;
-  
-  skip_space(inp, idx);
-
-  Symbol func = {0};
-  func.name = strdup(fname);
-  func.symbol_kind = SYM_FUNC;
-  func.ret_type = TOKEN_UNKNOWN;
-  func.arg_count = 0;
-  func.builtin = false;
-
-  SymbolTable args = {0};
-  while (inp->type[*idx] != TOKEN_RPAREN){
-      if (inp->type[*idx] == TOKEN_SPACE || inp->type[*idx] == TOKEN_NEWLINE) (*idx)++;
-      if (inp->type[*idx] != TOKEN_IDENTIFIER){
-      fprintf(stderr, "Expected Arg Name\n");
-      exit(1);
-    }
+Token parse_func_def(Token *inp, size_t *idx, SymbolTable *sym) {
     skip_space(inp, idx);
-
-    Symbol arg = {0};
-    arg.name = strdup(inp->text[*idx]);
-    arg.arg_types[func.arg_count] = inp->type[*idx];
-    arg.builtin = false;
-    arg.symbol_kind = SYM_VAR;
-    // symbol_table_add(&args, arg); // TODO: do this after parsing arg type
-    (*idx)++;
-    skip_space(inp, idx);
-     
-    if (inp->type[*idx] != TOKEN_COLON){
-      fprintf(stderr, "Expected ':' after arg name\n");
-      exit(1);
-    }
-    // func.arg_count++;
-    (*idx)++;
-    skip_space(inp, idx);
-
-    if (inp->type[*idx] != TOKEN_IDENT_INT){ // TODO: unharcode should be easy just keep it as TOKEN_IDENTIFIER
-      fprintf(stderr, "Expected Type after ':'\n"); // BUT NEED TO CHECK TABLE IF WE DO ^
-      exit(1);
-    }
-    arg.arg_types[func.arg_count] = inp->type[*idx];
-    (*idx)++;
-    skip_space(inp, idx);
-
-    if (inp->type[*idx] == TOKEN_COMMA){
-      (*idx)++;
-     func.arg_count++; // PROBABLY THE RIGHT PLACE TO DO THIS
-     continue;
-      // fprintf(stderr, "Expected Comma after type\n");
-      // fprintf(stderr, "At Token %zu\n", *idx);
-    } else if (inp->type[*idx] == TOKEN_RPAREN){
-      skip_space(inp, idx);
-      break;
-      // func.arg_count++; // PROBABLY THE RIGHT PLACE TO DO THIS
-    // (*idx)++;
-      } else {
-        fprintf(stderr, "Expected Comma or RPAREN after type\n");
-        fprintf(stderr, "At Token %zu\n", *idx);
-
-      }
-    // (*idx)++;
-    // skip_space(inp, idx);
-    //
-  }
-    (*idx)++;
-    skip_space(inp, idx);
-    if (inp->type[*idx] != TOKEN_IDENT_INT){
-      fprintf(stderr, "Expected return type after ')'\n");
-      exit(1);
-    }
-    func.ret_type = inp->type[*idx]; // probably wont work for serious typing.
-    (*idx)++;
-    skip_space(inp, idx);
-
-    if (inp->type[*idx] != TOKEN_LCURLY){
-      fprintf(stderr, "Expected Left Curly Bracket '{'\n");
-      exit(1);
+    if (inp->type[*idx] != TOKEN_FN) {
+        fprintf(stderr, "Expected 'fn'\n");
+        exit(1);
     }
     (*idx)++;
     skip_space(inp, idx);
 
-    while (inp->type[*idx] != TOKEN_RCURLY){
-      // FULL PARSING LOGIC SHOULD BE HERE 
-      // let (definiton parser should be alone)
+    if (inp->type[*idx] != TOKEN_IDENTIFIER) {
+        fprintf(stderr, "Expected function name after 'fn'\n");
+        exit(1);
     }
+
+    const char *fname = inp->text[*idx];
+    (*idx)++;
+    skip_space(inp, idx);
+
+    if (inp->type[*idx] != TOKEN_LPAREN) {
+        fprintf(stderr, "Expected '('\n");
+        exit(1);
+    }
+    (*idx)++;
+    skip_space(inp, idx);
+
+    Symbol func = {0};
+    func.name = strdup(fname);
+    func.symbol_kind = SYM_FUNC;
+    func.ret_type = TOKEN_UNKNOWN;
+    func.arg_count = 0;
+    func.builtin = false;
+
+    while (inp->type[*idx] != TOKEN_RPAREN) {
+        skip_space(inp, idx);
+        if (inp->type[*idx] != TOKEN_IDENTIFIER) {
+            fprintf(stderr, "Expected argument name\n");
+            exit(1);
+        }
+
+        (*idx)++;
+        skip_space(inp, idx);
+
+        if (inp->type[*idx] != TOKEN_COLON) {
+            fprintf(stderr, "Expected ':' after argument name\n");
+            exit(1);
+        }
+
+        (*idx)++;
+        skip_space(inp, idx);
+
+        if (inp->type[*idx] != TOKEN_IDENT_INT) {
+            fprintf(stderr, "Expected type after ':'\n");
+            exit(1);
+        }
+
+        func.arg_types[func.arg_count++] = inp->type[*idx];
+        (*idx)++;
+        skip_space(inp, idx);
+
+        if (inp->type[*idx] == TOKEN_COMMA) {
+            (*idx)++;
+            continue;
+        } else if (inp->type[*idx] == TOKEN_RPAREN) {
+            break;
+        } else {
+            fprintf(stderr, "Expected ',' or ')' after argument type\n");
+            exit(1);
+        }
+    }
+
+    (*idx)++;
+    skip_space(inp, idx);
+
+    if (inp->type[*idx] != TOKEN_IDENT_INT) {
+        fprintf(stderr, "Expected return type after ')'\n");
+        exit(1);
+    }
+
+    func.ret_type = inp->type[*idx];
+    (*idx)++;
+    skip_space(inp, idx);
+
+    if (inp->type[*idx] != TOKEN_LCURLY) {
+        fprintf(stderr, "Expected '{'\n");
+        exit(1);
+    }
+
+    (*idx)++;
+    skip_space(inp, idx);
+
+    while (inp->type[*idx] != TOKEN_RCURLY && inp->type[*idx] != TOKEN_EOF) {
+        (*idx)++;
+    }
+
+    if (inp->type[*idx] != TOKEN_RCURLY) {
+        fprintf(stderr, "Expected '}' at end of function\n");
+        exit(1);
+    }
+
+    (*idx)++;
+    symbol_table_add(sym, func);
+    Token empty = {0};
+    return empty;
 }
-
 
 
 
