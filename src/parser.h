@@ -55,6 +55,25 @@ typedef struct {
   size_t capacity;
 } SymbolTable; 
 
+typedef struct {
+    Token* statements;
+    size_t size;
+    size_t capacity;
+} Block;
+
+void block_append(Block *b, Token t){
+    if (b->capacity == 0) {
+        b->capacity = 192;
+        b = (Block*)malloc(sizeof(Token)*b->capacity);
+    }
+    if (b->size >= b->capacity) {
+        b->capacity *=2;
+        b = (Block*)realloc(b, sizeof(Token)*b->capacity);
+    }
+    b->statements[b->size] = t; // probably wrong
+    b->size++;
+}
+
 
 // static int builtin_num = sizeof(builtins)/sizeof(builtins[0]);
 
@@ -283,7 +302,7 @@ Token parse_statement(Token *inp, size_t *idx, SymbolTable *sym){
   }
 }
 
-Token parse_func_def(Token *inp, size_t *idx, SymbolTable *sym) {
+Block *parse_func_def(Token *inp, size_t *idx, SymbolTable *sym) {
     skip_space(inp, idx);
     if (inp->type[*idx] != TOKEN_FN) {
         fprintf(stderr, "Expected 'fn'\n");
@@ -373,11 +392,13 @@ Token parse_func_def(Token *inp, size_t *idx, SymbolTable *sym) {
     (*idx)++;
     skip_space(inp, idx);
 
+    Block *block = {0};
     Token statement = {0};
     
     while (inp->type[*idx] != TOKEN_RCURLY && inp->type[*idx] != TOKEN_EOF) {
         statement = parse_statement(inp, idx, sym);
         skip_space(inp, idx);
+        block_append(block, statement);
     }
 
     if (inp->type[*idx] != TOKEN_RCURLY) {
@@ -387,7 +408,7 @@ Token parse_func_def(Token *inp, size_t *idx, SymbolTable *sym) {
 
     (*idx)++;
     symbol_table_add(sym, func);
-    return statement; // TODO: return block aka multiple statements
+    return block; // TODO: return block aka multiple statements
 }
 
 
