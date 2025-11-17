@@ -61,11 +61,18 @@ typedef struct {
     size_t capacity;
 } Block;
 
+void block_init(Block *b, size_t initial_cap){    
+    b->statements = malloc(sizeof(Token) * initial_cap);
+    b->capacity = initial_cap;
+    b->size = 0;
+}
+
 void block_append(Block *b, Token t){
-    if (b->capacity == 0) {
-        b->capacity = 192;
-        b = (Block*)malloc(sizeof(Token)*b->capacity);
-    }
+    // if (b->capacity == 0) {
+    //     b->capacity = 192;
+    //     b->size = 0;
+    //     b->statements = (Token*)malloc(sizeof(Token)*b->capacity);
+    // }
     if (b->size >= b->capacity) {
         b->capacity *=2;
         b = (Block*)realloc(b, sizeof(Token)*b->capacity);
@@ -392,7 +399,8 @@ Block *parse_func_def(Token *inp, size_t *idx, SymbolTable *sym) {
     (*idx)++;
     skip_space(inp, idx);
 
-    Block *block = {0};
+    Block *block = (Block*)malloc(sizeof(Block));
+    block_init(block, 55);
     Token statement = {0};
     
     while (inp->type[*idx] != TOKEN_RCURLY && inp->type[*idx] != TOKEN_EOF) {
