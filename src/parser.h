@@ -201,6 +201,88 @@ void skip_space(Token *inp, size_t *idx){
   while (inp->type[*idx] == TOKEN_SPACE || inp->type[*idx] == TOKEN_NEWLINE) (*idx)++;
 }
 
+
+Token slice_token(Token *inp, size_t a, size_t z){ // probably should be implemented in lexer but not bothered
+  Token t = {0};
+  token_init(&t, z-a+1);
+  for (size_t i=a; i<z; ++i){
+    token_push(&t, inp->type[i], inp->text[i], inp->behaviour[i], inp->cursor_skip[i]);
+  }
+  return t;
+}
+
+Token parse_statement(Token *inp, size_t *idx, SymbolTable *sym){
+  skip_space(inp, idx);
+
+  if (inp->type[*idx] == TOKEN_LET){
+    (*idx)++;
+    skip_space(inp, idx);
+
+    if (inp->type[*idx] != TOKEN_IDENTIFIER){
+      fprintf(stderr, "Expected Identifier after 'let'");
+      exit(1);
+    }
+
+    char *var_name = inp->text[*idx];
+    (*idx)++;
+    skip_space(inp, idx);
+
+    if (inp->type[*idx] != TOKEN_EQU){
+      fprintf(stderr, "Expected '=' after identifier");
+      exit(1);
+    }
+    (*idx)++;
+    skip_space(inp, idx);
+
+    size_t expr_start = *idx;
+    while (inp->type[*idx] != TOKEN_SEMI && inp->type[*idx] != TOKEN_EOF){
+      (*idx)++;
+    }
+
+    size_t expr_end = *idx;
+    Token expr = slice_token(inp, expr_start, expr_end);
+    Token rpn = build_rpn(&expr, sym);
+
+
+    Symbol exprn = 
+    {
+      .name=strdup(var_name),
+      .symbol_kind = SYM_VAR,
+      .builtin = false,
+      .ret_type = TOKEN_UNKNOWN
+    }; 
+    symbol_table_add(sym, exprn);
+
+    skip_space(inp, idx);
+    if (inp->type[*idx] == TOKEN_SEMI) {
+      (*idx)++;
+      skip_space(inp, idx);
+      return rpn;
+    }
+  } else if (inp->type[*idx] == TOKEN_RETURN) {
+      (*idx)++;
+      skip_space(inp, idx);
+
+      size_t expr_start = *idx;
+      while (inp->type[*idx] != TOKEN_SEMI && inp->type[*idx] != TOKEN_EOF){
+          (*idx)++;
+      }
+      size_t expr_end = *idx;
+
+      Token expr = slice_token(inp, expr_start, expr_end);
+      Token rpn = build_rpn(&expr, sym);
+      (*idx)++;
+      if (inp->type[*idx] == TOKEN_SEMI) {
+        (*idx)++;
+        skip_space(inp, idx);
+        return rpn;
+      }
+  } else {
+      fprintf(stderr, "Unexpected statement '%s\n'", inp->text[*idx]);
+      exit(1);
+  }
+}
+
 Token parse_func_def(Token *inp, size_t *idx, SymbolTable *sym) {
     skip_space(inp, idx);
     if (inp->type[*idx] != TOKEN_FN) {
@@ -291,8 +373,11 @@ Token parse_func_def(Token *inp, size_t *idx, SymbolTable *sym) {
     (*idx)++;
     skip_space(inp, idx);
 
+    Token statement = {0};
+    
     while (inp->type[*idx] != TOKEN_RCURLY && inp->type[*idx] != TOKEN_EOF) {
-        (*idx)++;
+        statement = parse_statement(inp, idx, sym);
+        skip_space(inp, idx);
     }
 
     if (inp->type[*idx] != TOKEN_RCURLY) {
@@ -302,8 +387,7 @@ Token parse_func_def(Token *inp, size_t *idx, SymbolTable *sym) {
 
     (*idx)++;
     symbol_table_add(sym, func);
-    Token empty = {0};
-    return empty;
+    return statement; // TODO: return block aka multiple statements
 }
 
 
