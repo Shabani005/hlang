@@ -9,8 +9,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+<<<<<<< HEAD
 #include <sys/mman.h>
 #include <stdint.h>
+=======
+>>>>>>> 485f7f97701a51af2b534b11274f7b3a52fa002b
 
 typedef struct {
   int debug;
@@ -36,6 +39,7 @@ typedef struct {
   size_t capacity;
 } nb_downloads;
 
+<<<<<<< HEAD
 typedef struct {
   size_t count;
   char** values;
@@ -93,17 +97,28 @@ static void ensure_default_arena(void) {
 #define nb_ar_free()       ( ensure_default_arena(), nb_ar_free_generic(default_arena) )
 #define nb_ar_reset()      ( ensure_default_arena(), nb_ar_reset_generic(default_arena) )
 
+=======
+
+static nb_downloads nb_default_down;
+>>>>>>> 485f7f97701a51af2b534b11274f7b3a52fa002b
 
 #define nb_append_da(nb_arr, ...) \
     nb_append_va(nb_arr, \
                        ((const char*[]){__VA_ARGS__}), \
                        (sizeof((const char*[]){__VA_ARGS__})/sizeof(const char*)))
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 485f7f97701a51af2b534b11274f7b3a52fa002b
 #define nb_qsortsa(arr) nb_qsorts_impl((arr), sizeof(arr)/sizeof(arr[0]))
 #define nb_qsortf(arr) nb_qsortf_impl((arr), sizeof(arr)/sizeof(arr[0]))
 #define nb_qsorti(arr) nb_qsorti_impl((arr), sizeof(arr)/sizeof(arr[0]))
 #define nb_split(string, ...) nb_split_impl(string, (nb_opt) {__VA_ARGS__})
+<<<<<<< HEAD
 #define nb_hexdump(filename) nb_hexdump_generic(filename, &nb_default_info_h)
+=======
+>>>>>>> 485f7f97701a51af2b534b11274f7b3a52fa002b
 
 // "Build" System
 void nb_init(nb_arr *newarr, int initial_capacity); // obsolete
@@ -127,18 +142,31 @@ void nb_cmd(nb_arr *newarr);
 void nb_copy_file(char* old_file_name, char* new_file_name);
 char* nb_read_file(char* file_name);
 void nb_write_file(char* name, char* buf);
+<<<<<<< HEAD
 char* nb_hexdump_generic(char* filename, nb_hexinfo *info);
 
 char* nb_xxd(char* filename, nb_xxd_info *info, char* outname);
+=======
+>>>>>>> 485f7f97701a51af2b534b11274f7b3a52fa002b
 nb_file nb_read_file_c(char* file_name);
 bool nb_did_file_change(char *filename);
 bool nb_does_file_exist(char *filename);
 void nb_rebuild(int argc, char **argv);
+<<<<<<< HEAD
 void nb_mkdir_if_not_exist(char* dirname);
+=======
+>>>>>>> 485f7f97701a51af2b534b11274f7b3a52fa002b
 void nb_end();
 void include_http_custom(const char* url, const char* filename);
 //bool needs_rebuild(); // need to implement rename file first to .old or something like nob does TODO
 
+
+// Misc utils
+int   nb_compf(const void *a, const void *b);
+int   nb_compi(const void *a, const void *b);
+char* nb_slice_str(char* a, size_t start, size_t end); // python slicing in c :Kappa:
+void  nb_qsortf_impl(void *base, size_t nmemb); // these    functions      macros
+void  nb_qsorti_impl(void *base, size_t nmemb); //      two          have 
 
 
 // Misc utils
@@ -157,12 +185,31 @@ void     nb_ht_hash_append(nb_ht_table *t, const char *value);
 void     nb_ht_string_append(nb_ht_Strings* s, char* value);
 
 #ifdef NB_IMPLEMENTATION // make sure to define this before using the header
+<<<<<<< HEAD
+=======
+
+
+
+
+
+>>>>>>> 485f7f97701a51af2b534b11274f7b3a52fa002b
 char* nb_slice_str(char* a, size_t start, size_t end){
   size_t len = end-start;
   char* result = malloc(len+1);
   memmove(result, a+start, len);
   result[len] = '\0';
   return result;
+<<<<<<< HEAD
+=======
+}
+
+ 
+/*
+  char* nb_strdup(const char* s) {
+    char* d = malloc(strlen(s) + 1);
+    if (d) strcpy(d, s);
+    return d;
+>>>>>>> 485f7f97701a51af2b534b11274f7b3a52fa002b
 }
 
 
@@ -175,6 +222,7 @@ void nb_init(nb_arr *newarr, int initial_capacity){
 }
 
 
+<<<<<<< HEAD
 void nb_append(nb_arr *a, char *val) {
     if (a->capacity == 0) {
         a->capacity = 16;
@@ -189,6 +237,18 @@ void nb_append(nb_arr *a, char *val) {
     }
 
     a->value[a->arrsize++] = strdup(val);
+=======
+// later increase cap by size of new sheiSSe
+void nb_append(nb_arr *newarr, char *newval){
+  if (newarr->value == NULL){
+    newarr->capacity =16;
+  if (newarr->capacity > 16 | newarr->arrsize > newarr->capacity) {
+    newarr->capacity *=2;
+  }
+    newarr->value = (char**)realloc(newarr->value, sizeof(char*) * newarr->capacity);
+  } 
+    newarr->value[newarr->arrsize++] = strdup(newval);
+>>>>>>> 485f7f97701a51af2b534b11274f7b3a52fa002b
 }
 
 void nb_append_int(nb_arr *newarr, int myint){
@@ -392,7 +452,11 @@ void nb_rebuild(int argc, char **argv){
 }
 
 
+<<<<<<< HEAD
 nb_file nb_read_file_c(char* file_name){ 
+=======
+nb_file nb_read_file_c(char* file_name){ // old name shouldnt be nobuild.c. it should be the name of the current file. I should think more about adding error handling
+>>>>>>> 485f7f97701a51af2b534b11274f7b3a52fa002b
   nb_file file; 
 
   file.filep = fopen(file_name, "rb");
@@ -408,7 +472,11 @@ nb_file nb_read_file_c(char* file_name){
 }
 
 
+<<<<<<< HEAD
 char* nb_read_file(char* file_name){
+=======
+char* nb_read_file(char* file_name){ // old name shouldnt be nobuild.c. it should be the name of the current file. I should think more about adding error handling
+>>>>>>> 485f7f97701a51af2b534b11274f7b3a52fa002b
   nb_file file; 
 
   file.filep = fopen(file_name, "r");
@@ -517,6 +585,7 @@ void nb_end(){
   }
 }
 
+<<<<<<< HEAD
 float nb_time(){
   struct timespec t;
   clock_gettime(CLOCK_MONOTONIC, &t);
@@ -795,3 +864,8 @@ char* nb_append_null(char* buf, size_t len){
 #endif //NB_IMPLEMENTATION
 
 // TODO: add #ifdef NB_STRIP_PREFIX in the future 
+=======
+#endif //NB_IMPLEMENTATION
+
+// TODO: add #ifdef NB_STRIP_PREFIX in the future
+>>>>>>> 485f7f97701a51af2b534b11274f7b3a52fa002b

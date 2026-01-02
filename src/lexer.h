@@ -29,7 +29,9 @@ typedef enum {
   TOKEN_SEMI,
   TOKEN_FN,
   TOKEN_LET,
-  TOKEN_IDENT_INT //TODO: unhardcode
+  TOKEN_IDENT_INT, //TODO: unhardcode
+  TOKEN_EQU,
+  TOKEN_RETURN
 } symbols;
 
 typedef enum {
@@ -67,7 +69,10 @@ char *token_type_to_string(symbols type) {
     case TOKEN_FN: return "TOKEN_FN";
     case TOKEN_LET: return "TOKEN_LET";
     case TOKEN_IDENT_INT: return "TOKEN_IDENT_INT";
-    default: return "UNKNOWN_SYMBOL";
+    case TOKEN_EQU: return "TOKEN_EQU";
+    case TOKEN_RETURN: return "TOKEN_RETURN";
+
+                    // default: return "UNKNOWN_SYMBOL";
   }
 }
 
@@ -196,6 +201,7 @@ size_t read_from_tok(Token *tok, const char *input, size_t cursor) {
     
     if (strcmp(buf, "let") == 0) token_push(tok, TOKEN_LET, buf, BHV_UNDEFINED, cursor - start);
     else if (strcmp(buf, "fn") == 0) token_push(tok, TOKEN_FN, buf, BHV_UNDEFINED, cursor - start);
+    else if (strcmp(buf, "return") == 0) token_push(tok, TOKEN_RETURN, buf, BHV_UNDEFINED, cursor - start);
     else if (strcmp(buf, "int") == 0) token_push(tok, TOKEN_IDENT_INT, buf, BHV_UNDEFINED, cursor - start); // TODO: unhardcode
     else token_push(tok, TOKEN_IDENTIFIER, buf, BHV_IDENT, cursor - start);
 
@@ -212,6 +218,7 @@ size_t read_from_tok(Token *tok, const char *input, size_t cursor) {
     case '}': token_push(tok, TOKEN_RCURLY, "}", BHV_STACK, 1); break;
     case ';': token_push(tok, TOKEN_SEMI, ";", BHV_STACK, 1); break;
     case ':': token_push(tok, TOKEN_COLON, ":", BHV_STACK, 1); break;
+    case '=': token_push(tok, TOKEN_EQU, "=", BHV_STACK, 1); break;
 
     case '(':
       token_push(tok, TOKEN_LPAREN, "(", BHV_STACK, 1);

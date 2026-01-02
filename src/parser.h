@@ -55,6 +55,32 @@ typedef struct {
   size_t capacity;
 } SymbolTable; 
 
+typedef struct {
+    Token* statements;
+    size_t size;
+    size_t capacity;
+} Block;
+
+void block_init(Block *b, size_t initial_cap){    
+    b->statements = malloc(sizeof(Token) * initial_cap);
+    b->capacity = initial_cap;
+    b->size = 0;
+}
+
+void block_append(Block *b, Token t){
+    // if (b->capacity == 0) {
+    //     b->capacity = 192;
+    //     b->size = 0;
+    //     b->statements = (Token*)malloc(sizeof(Token)*b->capacity);
+    // }
+    if (b->size >= b->capacity) {
+        b->capacity *=2;
+        b = (Block*)realloc(b, sizeof(Token)*b->capacity);
+    }
+    b->statements[b->size] = t; // probably wrong
+    b->size++;
+}
+
 
 // static int builtin_num = sizeof(builtins)/sizeof(builtins[0]);
 
@@ -197,81 +223,201 @@ void print_token(Token *tk){
 }
 
 
-Token parse_func_def(Token *inp, size_t *idx, SymbolTable *sym){
-  if (inp->type[*idx] != TOKEN_FN){
-    fprintf(stderr, "Expected 'fn'\n");
-    exit(1);
-  }
-  (*idx)++;
-
-  if (inp->type[*idx] != TOKEN_IDENTIFIER){
-    fprintf(stderr, "Expected function name after 'fn'\n");
-    exit(1);
-  }
-  const char* fname = inp->text[*idx];
-  (*idx)++;
-
-  if (inp->type[*idx] != TOKEN_LPAREN){
-    fprintf(stderr, "Expected '('\n");
-    exit(1);
-  }
-  (*idx)++;
-
-  Symbol func = {0};
-  func.name = strdup(fname);
-  func.symbol_kind = SYM_FUNC;
-  func.ret_type = TOKEN_UNKNOWN;
-  func.arg_count = 0;
-  func.builtin = false;
-
-  while (inp->type[*idx] != TOKEN_RPAREN){
-    
-    if (inp->type[*idx] != TOKEN_IDENTIFIER){
-      fprintf(stderr, "Expected Arg Name\n");
-      exit(1);
-    }
-    // save THIS TOKEN NAME AS VARIABLE PROBABLY.
-    (*idx)++;
-    
-    if (inp->type[*idx] != TOKEN_COLON){
-      fprintf(stderr, "Expected ':' after arg name\n");
-      exit(1);
-    }
-    func.arg_count++;
-    (*idx)++;
-
-    if (inp->type[*idx] != TOKEN_IDENT_INT){ // TODO: unharcode should be easy just keep it as TOKEN_IDENTIFIER
-      fprintf(stderr, "Expected Type after ':'\n"); // BUT NEED TO CHECK TABLE IF WE DO ^
-      exit(1);
-    }
-    (*idx)++;
-
-    if (inp->type[*idx] != TOKEN_COMMA){
-      fprintf(stderr, "Expected Comma after type\n");
-      exit(1);
-    }
-    (*idx)++;
-
-  }
-    if (inp->type[*idx != TOKEN_IDENTIFIER]){
-      fprintf(stderr, "Expected return type after ')'\n");
-      exit(1);
-    }
-    func.ret_type = inp->type[*idx]; // probably wont work for serious typing.
-    (*idx)++;
-
-    if (inp->type[*idx] != TOKEN_LCURLY){
-      fprintf(stderr, "Expected Left Curly Bracket '{'\n");
-      exit(1);
-    }
-    (*idx)++;
-
-    while (inp->type[*idx] != TOKEN_RCURLY){
-      // FULL PARSING LOGIC SHOULD BE HERE 
-      // let (definiton parser should be alone)
-    }
+void skip_space(Token *inp, size_t *idx){
+  while (inp->type[*idx] == TOKEN_SPACE || inp->type[*idx] == TOKEN_NEWLINE) (*idx)++;
 }
 
+
+Token slice_token(Token *inp, size_t a, size_t z){ // probably should be implemented in lexer but not bothered
+  Token t = {0};
+  token_init(&t, z-a+1);
+  for (size_t i=a; i<z; ++i){
+    token_push(&t, inp->type[i], inp->text[i], inp->behaviour[i], inp->cursor_skip[i]);
+  }
+  return t;
+}
+
+Token parse_statement(Token *inp, size_t *idx, SymbolTable *sym){
+  skip_space(inp, idx);
+
+  if (inp->type[*idx] == TOKEN_LET){
+    (*idx)++;
+    skip_space(inp, idx);
+
+    if (inp->type[*idx] != TOKEN_IDENTIFIER){
+      fprintf(stderr, "Expected Identifier after 'let'");
+      exit(1);
+    }
+
+    char *var_name = inp->text[*idx];
+    (*idx)++;
+    skip_space(inp, idx);
+
+    if (inp->type[*idx] != TOKEN_EQU){
+      fprintf(stderr, "Expected '=' after identifier");
+      exit(1);
+    }
+    (*idx)++;
+    skip_space(inp, idx);
+
+    size_t expr_start = *idx;
+    while (inp->type[*idx] != TOKEN_SEMI && inp->type[*idx] != TOKEN_EOF){
+      (*idx)++;
+    }
+
+    size_t expr_end = *idx;
+    Token expr = slice_token(inp, expr_start, expr_end);
+    Token rpn = build_rpn(&expr, sym);
+
+
+    Symbol exprn = 
+    {
+      .name=strdup(var_name),
+      .symbol_kind = SYM_VAR,
+      .builtin = false,
+      .ret_type = TOKEN_UNKNOWN
+    }; 
+    symbol_table_add(sym, exprn);
+
+    skip_space(inp, idx);
+    if (inp->type[*idx] == TOKEN_SEMI) {
+      (*idx)++;
+      skip_space(inp, idx);
+      return rpn;
+    }
+  } else if (inp->type[*idx] == TOKEN_RETURN) {
+      (*idx)++;
+      skip_space(inp, idx);
+
+      size_t expr_start = *idx;
+      while (inp->type[*idx] != TOKEN_SEMI && inp->type[*idx] != TOKEN_EOF){
+          (*idx)++;
+      }
+      size_t expr_end = *idx;
+
+      Token expr = slice_token(inp, expr_start, expr_end);
+      Token rpn = build_rpn(&expr, sym);
+      (*idx)++;
+      if (inp->type[*idx] == TOKEN_SEMI) {
+        (*idx)++;
+        skip_space(inp, idx);
+        return rpn;
+      }
+  } else {
+      fprintf(stderr, "Unexpected statement '%s\n'", inp->text[*idx]);
+      exit(1);
+  }
+}
+
+Block *parse_func_def(Token *inp, size_t *idx, SymbolTable *sym) {
+    skip_space(inp, idx);
+    if (inp->type[*idx] != TOKEN_FN) {
+        fprintf(stderr, "Expected 'fn'\n");
+        exit(1);
+    }
+    (*idx)++;
+    skip_space(inp, idx);
+
+    if (inp->type[*idx] != TOKEN_IDENTIFIER) {
+        fprintf(stderr, "Expected function name after 'fn'\n");
+        exit(1);
+    }
+
+    const char *fname = inp->text[*idx];
+    (*idx)++;
+    skip_space(inp, idx);
+
+    if (inp->type[*idx] != TOKEN_LPAREN) {
+        fprintf(stderr, "Expected '('\n");
+        exit(1);
+    }
+    (*idx)++;
+    skip_space(inp, idx);
+
+    Symbol func = {0};
+    func.name = strdup(fname);
+    func.symbol_kind = SYM_FUNC;
+    func.ret_type = TOKEN_UNKNOWN;
+    func.arg_count = 0;
+    func.builtin = false;
+
+    while (inp->type[*idx] != TOKEN_RPAREN) {
+        skip_space(inp, idx);
+        if (inp->type[*idx] != TOKEN_IDENTIFIER) {
+            fprintf(stderr, "Expected argument name\n");
+            exit(1);
+        }
+
+        (*idx)++;
+        skip_space(inp, idx);
+
+        if (inp->type[*idx] != TOKEN_COLON) {
+            fprintf(stderr, "Expected ':' after argument name\n");
+            exit(1);
+        }
+
+        (*idx)++;
+        skip_space(inp, idx);
+
+        if (inp->type[*idx] != TOKEN_IDENT_INT) {
+            fprintf(stderr, "Expected type after ':'\n");
+            exit(1);
+        }
+
+        func.arg_types[func.arg_count++] = inp->type[*idx];
+        (*idx)++;
+        skip_space(inp, idx);
+
+        if (inp->type[*idx] == TOKEN_COMMA) {
+            (*idx)++;
+            continue;
+        } else if (inp->type[*idx] == TOKEN_RPAREN) {
+            break;
+        } else {
+            fprintf(stderr, "Expected ',' or ')' after argument type\n");
+            exit(1);
+        }
+    }
+
+    (*idx)++;
+    skip_space(inp, idx);
+
+    if (inp->type[*idx] != TOKEN_IDENT_INT) {
+        fprintf(stderr, "Expected return type after ')'\n");
+        exit(1);
+    }
+
+    func.ret_type = inp->type[*idx];
+    (*idx)++;
+    skip_space(inp, idx);
+
+    if (inp->type[*idx] != TOKEN_LCURLY) {
+        fprintf(stderr, "Expected '{'\n");
+        exit(1);
+    }
+
+    (*idx)++;
+    skip_space(inp, idx);
+
+    Block *block = (Block*)malloc(sizeof(Block));
+    block_init(block, 55);
+    Token statement = {0};
+    
+    while (inp->type[*idx] != TOKEN_RCURLY && inp->type[*idx] != TOKEN_EOF) {
+        statement = parse_statement(inp, idx, sym);
+        skip_space(inp, idx);
+        block_append(block, statement);
+    }
+
+    if (inp->type[*idx] != TOKEN_RCURLY) {
+        fprintf(stderr, "Expected '}' at end of function\n");
+        exit(1);
+    }
+
+    (*idx)++;
+    symbol_table_add(sym, func);
+    return block; // TODO: return block aka multiple statements
+}
 
 
 
