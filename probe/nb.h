@@ -122,6 +122,7 @@ char* nb_append_null(char* buf, size_t len);
 void nb_print(nb_arr *newarr);
 void nb_print_info(nb_arr *newarr);
 void nb_cmd(nb_arr *newarr);
+void nb_cmdq(nb_arr *newarr);
 
 // File utils
 void nb_copy_file(char* old_file_name, char* new_file_name);
@@ -260,6 +261,42 @@ void nb_cmd(nb_arr *newarr) {
     }
 
     printf("[CMD] %s\n", cmd);
+    int ret = system(cmd);
+    if (ret == -1) perror("system");
+
+    free(cmd);
+    nb_free(newarr); 
+}
+
+
+void nb_cmdq(nb_arr *newarr) {
+  #if !defined(__GNUC__) || defined(__clang__)
+  fprintf(stderr, "doesnt support windows for now");
+  return;
+  #endif
+    if (newarr->arrsize < 1) {
+        printf("USAGE: provide more parameters\n");
+        return;
+    }
+
+    size_t total_len = 0;
+    for (int i = 0; i < newarr->arrsize; i++) {
+        total_len += strlen(newarr->value[i]) + 1;
+    }
+
+    char *cmd = malloc(total_len + 1 );
+    if (!cmd) {
+        fprintf(stderr, "Allocation failed in nb_cmd\n");
+        return;
+    }
+
+    cmd[0] = '\0';
+    for (int i = 0; i < newarr->arrsize; i++) {
+        strcat(cmd, newarr->value[i]);
+        if (i < newarr->arrsize - 1) strcat(cmd, " ");
+    }
+
+    // printf("[CMD] %s\n", cmd);
     int ret = system(cmd);
     if (ret == -1) perror("system");
 
@@ -758,7 +795,7 @@ char* nb_xxd(char* filename, nb_xxd_info *info, char* outname){
  
   // should probably do <= to ignore last thing
 
-  for (size_t i=1; i+1 < fsize; ++i){
+  for (size_t i=0; i+1 < fsize; ++i){
     p += sprintf(p, "0x%02x, ", buf[i]);
     count++;
   }

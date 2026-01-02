@@ -1,0 +1,29 @@
+#define NB_IMPLEMENTATION
+#include "nb.h"
+
+int main(int argc, char **argv){
+  if (argc != 3){
+    fprintf(stderr, "Usage: %s <input.hl> <executable-name>\n", argv[0]);
+    return 1;
+  }
+
+  
+  nb_xxd_info info = {0};
+  char *buf = nb_xxd(argv[1], &info, "bytecode");
+ 
+  nb_write_file("bytecode.c", buf);
+
+  nb_rebuild(argc, argv);
+  
+  nb_arr cmd = {0};
+
+  nb_append(&cmd, "gcc");
+  // nb_append(&cmd, "-Wall -Wextra");
+  nb_append(&cmd, "-static");
+  nb_append(&cmd, "./native.c");
+  nb_append_da(&cmd, "-o", argv[2]); // TODO: unhardcode
+  nb_cmdq(&cmd); 
+
+  // nb_append_da(&cmd, "./native", argv[1]);
+  // nb_cmdq(&cmd);
+}
