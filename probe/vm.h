@@ -70,7 +70,7 @@ instruct *rpn_to_bytecode(Token *rpn, size_t *out){
         } else {
             printf("[WARNING] Uknown Identifier '%s'\n", text);
         }
-        break; //TODO: unhardcode this
+        break;
       case TOKEN_EOF: ins.op = OP_HALT; break;
       default: continue;
     }
@@ -189,12 +189,10 @@ void emit_bytecode(VM *v){
     size_t i =0;
     while (i < v->program_size){
         if (v->program[i].op == OP_PUSH_INT) printf("OP_PUSH_INT(%f)\n", v->program[i].num);
-        else if (v->program[i].op == OP_PUSH_FLOAT) printf("OP_PUSH_FLOAT(%f)\n", v->program[i].num);        
+        else if (v->program[i].op == OP_PUSH_FLOAT) printf("OP_PUSH_FLOAT(%f)\n", v->program[i].num);
         else if (v->program[i].op == OP_PUSH_STRING) printf("OP_PUSH_STRING(\"%s\")\n", v->program[i].strlit);
         else printf("%s\n", op_to_str(v->program[i].op));
         i++;
     }
     printf("\n");
 }
-
-
